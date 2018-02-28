@@ -53,10 +53,10 @@ struct Position
 void computeAcc1(std::vector<Particle> *p, int start, int step){
 
     auto &particles = *p;
-    const int n = particles.size()/double(step)*(1+start)+0.5;
+    const int n = particles.size()/double(step) * (1+start)+0.5;
     int i=0;
     // std::cout<<"HERE "<<n<<"  "<<step<<"  "<<particles.size()<<"  "<<start<<std::endl;
-    for(int count=0, i = particles.size()/step*start; i<n; i++,count++){
+    for(int count=0, i = particles.size()/step * start; i<n; i++,count++){
         auto const p1c = particles[i];
         double localAcc[2] = {0,0};
         for(int j = 0, n = particles.size();j<n;j++){
@@ -68,7 +68,7 @@ void computeAcc1(std::vector<Particle> *p, int start, int step){
 
             double dx = p1c.pos[0]-p2.pos[0];
             double dy = p1c.pos[1]-p2.pos[1];//p2.pos[1];
-            double r = sqrt(dx*dx+dy*dy);
+            double r = sqrt(dx * dx + dy * dy);
             if(r<1e-4)
                 continue;
 
@@ -104,11 +104,11 @@ void computeAcc3(std::vector<Particle> *p, int start, int step){
 
         double dx = p1c.pos[0]-p2.pos[0];
         double dy = p1c.pos[1]-p2.pos[1];//p2.pos[1];
-        double r = sqrt(dx*dx+dy*dy);
+        double r = sqrt( dx * dx + dy * dy);
         double norm = p2.mass;
-        double acc1 = norm*forceField(r);            
-        localAcc[0] += acc1*dx;
-        localAcc[1] += acc1*dy;
+        double acc1 = norm * forceField(r);            
+        localAcc[0] += acc1 * dx;
+        localAcc[1] += acc1 * dy;
 
     }
     auto &p1 = particles[start];
@@ -127,7 +127,7 @@ void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
     Particle CoMp = node.GetCenterOfMassParticle();
     double dx = p.pos[0] - CoMp.pos[0];
     double dy = p.pos[1] - CoMp.pos[1];
-    double distance = sqrt(dx*dx + dy*dy);
+    double distance = sqrt(dx * dx + dy * dy);
     double theta = node.size/distance; 
     // std::cout<<depth<<" "<<p.id<<" "<<CoMp.pos[0]<<" "<<theta<<"  "<<p.pos[0]<<std::endl;
     if(isnan(theta)){
@@ -138,9 +138,9 @@ void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
     if(theta<thetaEps){
         double norm = CoMp.mass;
         // if(distance<1e-4){
-            double acc = norm*forceField(distance);
-            p.acc[0] += acc*dx;
-            p.acc[1] += acc*dy;
+            double acc = norm * forceField(distance);
+            p.acc[0] += acc * dx;
+            p.acc[1] += acc * dy;
         // }
     }
     else{
@@ -162,9 +162,9 @@ void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
                 if(r<1e-5)
                     continue;
                 double norm = tp->mass;
-                double acc = norm*forceField(r);
-                p.acc[0] += acc*dx;
-                p.acc[1] += acc*dy;
+                double acc = norm * forceField(r);
+                p.acc[0] += acc * dx;
+                p.acc[1] += acc * dy;
             }
         }
     }
@@ -207,10 +207,10 @@ void ParticleSimulation::BarnesHutSum(double dt){
     for(auto &p: particles){
         // std::cout<<p.acc[0]<<"  "<<p.acc[1]<<std::endl;
         p.acc[1] -=0;
-        p.pos[0] += p.vel[0]*dt + 0.5*p.acc[0]*dt*dt;
-        p.pos[1] += p.vel[1]*dt + 0.5*p.acc[1]*dt*dt;
-        p.vel[0] += 0.5*(p.oldacc[0]+p.acc[0])*dt;
-        p.vel[1] += 0.5*(p.oldacc[1]+p.acc[1])*dt;
+        p.pos[0] += p.vel[0] * dt + 0.5 * p.acc[0] * dt * dt;
+        p.pos[1] += p.vel[1] * dt + 0.5 * p.acc[1] * dt * dt;
+        p.vel[0] += 0.5 * (p.oldacc[0]+p.acc[0]) * dt;
+        p.vel[1] += 0.5 * (p.oldacc[1]+p.acc[1]) * dt;
         
         // if(p.pos[0]<x1  || p.pos[0]>x2){
         //     p.vel[0] *=-1;
