@@ -59,6 +59,7 @@ class CoordinateTrans{
         Pix operator()(double x, double y);
         Pix Coord2d2Pix(Coord2d pos);
         Coord2d Pix2Coord2d(Pix pix);
+    
     private:
         Rect outer;
         Range x;
@@ -89,11 +90,11 @@ inline Pix CoordinateTrans::operator()(double xx, double yy){
     return Coord2d2Pix({xx,yy});//outpix;
 }
 
-inline Coord2d CoordinateTrans::pix2Coord2d(Pix pix){
-    Coord2d outCoord;
+inline Coord2d CoordinateTrans::Pix2Coord2d(Pix pix){
+    Coord2d outCoord(0,0);
     double xrange = x.max-x.min;
     double yrange = y.max-y.min; 
-    outCoord.x = pix.x-outer.x
+    outCoord.x = pix.x-outer.x;
 }
 
 #endif

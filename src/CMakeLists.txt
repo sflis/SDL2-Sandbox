@@ -53,17 +53,17 @@ add_executable(CellSim2 src/CellMain.cxx src/CellSimulation2.cxx src/Graph.cxx s
 
 add_executable(Graph src/GraphMain.cxx src/FontCache.cxx src/Graph.cxx)
 
-# add_executable(Graph2 src/GraphMain2.cxx src/FontCache.cxx src/Graph.cxx)
+#add_executable(Graph2 src/GraphMain2.cxx src/FontCache.cxx src/Graph.cxx)
 
-#add_executable(Particles src/ParticleMain.cxx src/ParticleSimulation.cxx src/FontCache.cxx src/Graph.cxx src/QuadTree.cxx)
+add_executable(Particles src/ParticleMain.cxx src/ParticleSimulation.cxx src/FontCache.cxx src/Graph.cxx src/QuadTree.cxx)
 
-#add_executable(ParticlesNoGui src/ParticlesNoGui.cxx src/ParticleSimulation.cxx src/QuadTree.cxx)
+add_executable(ParticlesNoGui src/ParticlesNoGui.cxx src/ParticleSimulation.cxx src/QuadTree.cxx)
 
 target_link_libraries(CellSim SDL2)
 target_link_libraries(CellSim2 SDL2 SDL2_ttf)
 
-#target_link_libraries(Graph SDL2 SDL2_ttf)
-# target_link_libraries(Graph2 SDL2 SDL2_ttf)
-#target_link_libraries(Particles SDL2 SDL2_ttf )
+target_link_libraries(Graph SDL2 SDL2_ttf)
+#target_link_libraries(Graph2 SDL2 SDL2_ttf)
+target_link_libraries(Particles SDL2 SDL2_ttf )
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread -pthread -std=c++14")
 add_definitions( -O3 -g)

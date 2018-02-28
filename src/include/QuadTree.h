@@ -2,7 +2,7 @@
 #define QUADTREE_H_
 #include "ParticleSimulation.h"
 
-#include <SDL.h>
+// #include <SDL.h>
 
 #include <memory>
 #include <array>

@@ -22,7 +22,7 @@ ParticleSimulation::ParticleSimulation(double x1,
                                         // std::random_device rd; // obtain a random number from hardware
                                          // seed the generator
                                         // eng = std::mt19937(rd());
-                                        nThreads = 1;
+                                        nThreads = 2;
                                         for(int i = 0; i<nThreads; i++){
                                             workers.push_back(new Worker(nThreads,
                                                                             i,  
@@ -38,7 +38,7 @@ ParticleSimulation::ParticleSimulation(double x1,
                                                                         
 double const forceField(const double r){
 
-    return -1.0/(r*r*r+1e-3);//+1.0/(r*r*r*r+1e-5);
+    return -1.0/(r * r * r+1e-3);//+1.0/(r*r*r*r+1e-5);
 }
 
 struct Position
@@ -249,10 +249,10 @@ void ParticleSimulation::Step(double dt){
     for(auto &p: particles){
         // std::cout<<p.acc[0]<<"  "<<p.acc[1]<<std::endl;
         p.acc[1] -=0;
-        p.pos[0] += p.vel[0]*dt + 0.5*p.acc[0]*dt*dt;
-        p.pos[1] += p.vel[1]*dt + 0.5*p.acc[1]*dt*dt;
-        p.vel[0] += 0.5*(p.oldacc[0]+p.acc[0])*dt;
-        p.vel[1] += 0.5*(p.oldacc[1]+p.acc[1])*dt;
+        p.pos[0] += p.vel[0] * dt + 0.5 * p.acc[0] * dt * dt;
+        p.pos[1] += p.vel[1] * dt + 0.5 * p.acc[1] * dt * dt;
+        p.vel[0] += 0.5 * (p.oldacc[0]+p.acc[0]) * dt;
+        p.vel[1] += 0.5 * (p.oldacc[1]+p.acc[1]) * dt;
         
         if(p.pos[0]<x1  || p.pos[0]>x2){
             p.vel[0] *=-1;
@@ -288,10 +288,10 @@ void ParticleSimulation::Step1(double dt){
     for(auto &p: particles){
         // std::cout<<p.acc[0]<<"  "<<p.acc[1]<<std::endl;
         p.acc[1] -=0;
-        p.pos[0] += p.vel[0]*dt + 0.5*p.acc[0]*dt*dt;
-        p.pos[1] += p.vel[1]*dt + 0.5*p.acc[1]*dt*dt;
-        p.vel[0] += 0.5*(p.oldacc[0]+p.acc[0])*dt;
-        p.vel[1] += 0.5*(p.oldacc[1]+p.acc[1])*dt;
+        p.pos[0] += p.vel[0] * dt + 0.5 * p.acc[0] * dt * dt;
+        p.pos[1] += p.vel[1] * dt + 0.5 * p.acc[1] * dt * dt;
+        p.vel[0] += 0.5 * (p.oldacc[0]+p.acc[0]) * dt;
+        p.vel[1] += 0.5 * (p.oldacc[1]+p.acc[1]) * dt;
         
         if(p.pos[0]<x1  || p.pos[0]>x2){
             p.vel[0] *=-1;
@@ -313,10 +313,10 @@ void ParticleSimulation::Step2(double dt){
     for(auto &p: particles){
         // std::cout<<p.acc[0]<<"  "<<p.acc[1]<<std::endl;
         p.acc[1] -=0;
-        p.pos[0] += p.vel[0]*dt + 0.5*p.acc[0]*dt*dt;
-        p.pos[1] += p.vel[1]*dt + 0.5*p.acc[1]*dt*dt;
-        p.vel[0] += 0.5*(p.oldacc[0]+p.acc[0])*dt;
-        p.vel[1] += 0.5*(p.oldacc[1]+p.acc[1])*dt;
+        p.pos[0] += p.vel[0] * dt + 0.5 * p.acc[0] * dt * dt;
+        p.pos[1] += p.vel[1] * dt + 0.5 * p.acc[1] * dt * dt;
+        p.vel[0] += 0.5 * (p.oldacc[0]+p.acc[0]) * dt;
+        p.vel[1] += 0.5 * (p.oldacc[1]+p.acc[1]) * dt;
         
         if(p.pos[0]<x1  || p.pos[0]>x2){
             p.vel[0] *=-1;
@@ -422,7 +422,7 @@ void Worker::Run2(){
                 ql.unlock();
                 for(int j =0; j<i; j++){
                     // std::cout<<"Thread "<<threadIndex<<" processing "<<j<<std::endl;
-                    computeAccBarnesHut(*tree, particles[indexQueue.front()]);
+                    computeAccBarnesHut( * tree, particles[indexQueue.front()]);
                     indexQueue.pop();
                 }
                 ql.lock();

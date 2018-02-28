@@ -279,23 +279,25 @@ void Figure::Render(SDL_Rect rect){
 }
 //=============================================================================
 void Figure::Update(){
-  auto maxX=std::max_element(x.begin(),x.end());
-  auto minX=std::min_element(x.begin(),x.end());
-  auto maxY=std::max_element(y.begin(),y.end());
-  auto minY=std::min_element(y.begin(),y.end());
+  for(auto &l: lines){
+    auto maxX=std::max_element(l.xData.begin(),l.xData.end());
+    auto minX=std::min_element(l.xData.begin(),l.xData.end());
+    auto maxY=std::max_element(l.yData.begin(),l.yData.end());
+    auto minY=std::min_element(l.yData.begin(),l.yData.end());
 
-  if(*maxX>xlim.max){
-      xlim.max = *maxX;
-  }
-  if(*minX<xlim.min){
-      xlim.min=*minX;
-  }
+    if(*maxX>xlim.max){
+        xlim.max = *maxX;
+    }
+    if(*minX<xlim.min){
+        xlim.min=*minX;
+    }
 
-  if(*maxY>ylim.max){
-      ylim.max = *maxY;
-  }
-  if(*minY<ylim.min){
-      ylim.min=*minY;
+    if(*maxY>ylim.max){
+        ylim.max = *maxY;
+    }
+    if(*minY<ylim.min){
+        ylim.min=*minY;
+    }
   }
 }
 //=============================================================================
@@ -314,8 +316,8 @@ void InteractiveFigure::Render(){
 void InteractiveFigure::HandleInput(SDL_Event* e){
   
   int x, y;
-  SDL_GetMouseState( &x, &y )
-  Pix = {x,y};
+  SDL_GetMouseState( &x, &y );
+  // Pix = {x,y};
   
 
 }

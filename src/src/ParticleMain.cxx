@@ -6,7 +6,7 @@
 #include "QuadTree.h"
 
 #include <cstdlib>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <vector> 
 #include <iostream>
 #include <fstream>

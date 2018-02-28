@@ -1,8 +1,6 @@
 #ifndef GRAPH_H_
 #define GRAPH_H_
 
-
-
 #include "FontCache.h"
 #include "Coordinates.h"
 #include "Utils.h"
