@@ -1,11 +1,13 @@
 #ifndef GIW_SDL2_H_
 #define GIW_SDL2_H_
 
+#include "GIW_utils.h"
+
 #include <string>
 #include <memory>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
-#include "GIW_utils.h"
+
 
 namespace sdl2{
 

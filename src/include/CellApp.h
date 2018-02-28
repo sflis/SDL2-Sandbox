@@ -2,7 +2,7 @@
 #define _CELLAPP_H_
 #include <CellSimulation.h>
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <vector> 
 class CellApp {
  

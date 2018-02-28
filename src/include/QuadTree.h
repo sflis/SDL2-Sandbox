@@ -28,7 +28,7 @@ class QuadTree{
             // private:
                 std::vector<std::shared_ptr<Node> > nodes;// std::array<std::shared_ptr<Node>,4> nodes;
                 // std::weak_ptr<Particle> particle;
-                std::vector<Particle *> particles;
+                std::vector<Particle*> particles;
                 NodeType type;
                 int depth;
                 Particle GetCenterOfMassParticle() const;

@@ -1,12 +1,15 @@
 #ifndef GRAPH_H_
 #define GRAPH_H_
 
-#include "GIW_SDL2.h"
+
+
 #include "FontCache.h"
 #include "Coordinates.h"
 #include "Utils.h"
+#include "GIW_SDL2.h"
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
+
 #include <vector>
 
 enum color{blue,red,green,magenta};

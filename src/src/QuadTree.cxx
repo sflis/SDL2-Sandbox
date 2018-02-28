@@ -38,8 +38,8 @@ void QuadTree::BuildTree(std::vector<Particle> &particles){
 
 void QuadTree::Node::AddParticle(Particle *par,QuadTree &tree){
     totalMass += par->mass;
-    centerOfMass.x += par->mass*par->pos[0];
-    centerOfMass.y += par->mass*par->pos[1];
+    centerOfMass.x += par->mass * par->pos[0];
+    centerOfMass.y += par->mass * par->pos[1];
     if(type==Node::EmptyLeaf){
         particles.push_back(par);
         // particle = par;
@@ -66,10 +66,10 @@ void QuadTree::Node::AddParticle(Particle *par,QuadTree &tree){
             particles.push_back(par);   
             return;
         }
-        nodes.push_back(std::shared_ptr<Node>(new Node({p.x+size*0.5,p.y+size*0.5},size*0.5, EmptyLeaf,depth+1)));
-        nodes.push_back(std::shared_ptr<Node>(new Node({p.x+size*0.5,p.y-size*0.5},size*0.5, EmptyLeaf,depth+1)));
-        nodes.push_back(std::shared_ptr<Node>(new Node({p.x-size*0.5,p.y-size*0.5},size*0.5, EmptyLeaf,depth+1)));
-        nodes.push_back(std::shared_ptr<Node>(new Node({p.x-size*0.5,p.y+size*0.5},size*0.5, EmptyLeaf,depth+1)));
+        nodes.push_back(std::shared_ptr<Node>(new Node({p.x+size * 0.5,p.y+size * 0.5},size * 0.5, EmptyLeaf,depth+1)));
+        nodes.push_back(std::shared_ptr<Node>(new Node({p.x+size * 0.5,p.y-size * 0.5},size * 0.5, EmptyLeaf,depth+1)));
+        nodes.push_back(std::shared_ptr<Node>(new Node({p.x-size * 0.5,p.y-size * 0.5},size * 0.5, EmptyLeaf,depth+1)));
+        nodes.push_back(std::shared_ptr<Node>(new Node({p.x-size * 0.5,p.y+size * 0.5},size * 0.5, EmptyLeaf,depth+1)));
         type = node;
         
         if(particles[0]->pos[0]>=p.x){

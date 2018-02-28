@@ -1,7 +1,7 @@
 #ifndef _COORDINATES_H_
 #define _COORDINATES_H_
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 struct Range{
     double min;

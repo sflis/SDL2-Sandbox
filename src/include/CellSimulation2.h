@@ -67,7 +67,7 @@ class Creature{
         double dHealth;
         
         double speed;
-        Cell* currentCell;
+        Cell *currentCell;
         
         World *world;
 };
@@ -76,11 +76,11 @@ class Creature{
 
 struct World{
     World(int width, int height): width(width), height(height){
-        cells.resize(width*height);
+        cells.resize(width * height);
         //Initializing cells
         for(int x = 0; x < width; x++){
             for(int y = 0; y < height; y++){
-                cells[x*height + y] = Cell(x,y);
+                cells[x * height + y] = Cell(x,y);
             }
         }
 
@@ -88,16 +88,16 @@ struct World{
             for(int y = 0; y<height; y++){
                 std::vector<Cell*> neighbors;
                 //down
-                if(y<(height-1))neighbors.push_back(&cells[x*height + y + 1]);    
+                if(y<(height-1))neighbors.push_back(&cells[x * height + y + 1]);    
                 
                 //right
-                if(x<(width-1))neighbors.push_back(&cells[(x+1)*height+y]);   
+                if(x<(width-1))neighbors.push_back(&cells[(x+1) * height+y]);   
                 
                 
                 //up
-                if(y>0)neighbors.push_back(&cells[x*height+y-1]);
+                if(y>0)neighbors.push_back(&cells[x * height+y-1]);
                 //left
-                if(x>0)neighbors.push_back(&cells[(x-1)*height+y]);
+                if(x>0)neighbors.push_back(&cells[(x-1) * height+y]);
                 
                 cells[x*height + y].SetNeighbors(neighbors);
             }
@@ -107,7 +107,7 @@ struct World{
 
     }  
     void AddCreature(int x,int y,Creature *c){
-        cells[x*height+y].EnterCell(c); 
+        cells[x * height+y].EnterCell(c); 
         creatures.push_back(c);
     }
     void RemoveDeadCreatures();

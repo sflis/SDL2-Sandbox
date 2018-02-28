@@ -1,7 +1,7 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 inline uint32_t rgb2hex(uint8_t r,int8_t g,int8_t b){
     return (r << 16) + (g << 8) + b;

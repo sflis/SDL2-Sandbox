@@ -16,7 +16,7 @@
 double uniform(double min,double max){
     double r = (std::rand()%RAND_MAX)/double(RAND_MAX);
     double range = max-min;
-    return min +r*range;
+    return min +r * range;
 }
 
 int main(int argc, char **argv){
@@ -28,12 +28,12 @@ int main(int argc, char **argv){
     // std::uniform_real_distribution<> th(0.0,2*M_PI);
     double radius = 30;
     for(int i=0; i<16500;i++){
-        double theta = uniform(0,2*M_PI);//th(e2);
+        double theta = uniform(0,2 * M_PI);//th(e2);
         double d = uniform(0,1);//dist(e2);//veldist(e2);
-        double r =sqrt(radius*radius*d);
+        double r =sqrt(radius * radius * d);
         double vel = 0.00051;//veldist(e2);
-        particles.push_back({{20+r*cos(theta),10+r*sin(theta),0},
-                                {vel*(1500*r)*cos(theta+M_PI/2),vel*(1500*r)*sin(theta+M_PI/2),0},
+        particles.push_back({{20+r * cos(theta),10+r * sin(theta),0},
+                                {vel * (1500 * r) * cos(theta+M_PI/2),vel * (1500 * r) * sin(theta+M_PI/2),0},
                                 {0,0,0},
                                 {0,0,0},
                                 10.0,

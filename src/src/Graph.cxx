@@ -32,7 +32,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
         double half = 0.5;
         if(range.min < 0)
             half = -0.5;
-        double minMajorTick = (int(range.min/std::pow(10,power)+half))*std::pow(10,power);
+        double minMajorTick = (int(range.min/std::pow(10,power)+half)) * std::pow(10,power);
         char buf[100];
         double scale=1;
 
@@ -40,7 +40,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
             power--;
             scale = 2;
         }
-        double majorTickDistance =  std::pow(10,power)*scale;
+        double majorTickDistance =  std::pow(10,power) * scale;
         for(double i = minMajorTick; i<range.max;i+=majorTickDistance ){
             Pix p = cotrans(Coord2d(i,0.0));
             Pix p1 = box_coord(Pix(p.x,box_coord.inner.h));
@@ -54,7 +54,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
             std::string number(buf);
             Pix window_p = box_coord(Pix(p.x, box_coord.inner.h+1));
             Pix xSize = cotrans(Coord2d(majorTickDistance,0.0));
-            SDL_Rect box = {window_p.x-tickLabelFontSize*0.5,
+            SDL_Rect box = {window_p.x-tickLabelFontSize * 0.5,
                             window_p.y,
                             xSize.x,
                             tickLabelFontSize};
@@ -75,7 +75,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
             minMinorTick += std::pow(10,power);
         }
         scale *=2;
-        for(double i = minMinorTick; i<range.max;i+=std::pow(10,power)*scale ){
+        for(double i = minMinorTick; i<range.max;i+=std::pow(10,power) * scale ){
             Pix p = cotrans(Coord2d(i,0.0));
             Pix p1 = box_coord(Pix(p.x,box_coord.inner.h));
             Pix p2 = box_coord(Pix(p.x,box_coord.inner.h-4));
@@ -111,7 +111,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
         double half = 0.5;
         if(range.min < 0)
             half = -0.5;
-        double minMajorTick = (int(range.min/std::pow(10,power)+half))*std::pow(10,power);
+        double minMajorTick = (int(range.min/std::pow(10,power)+half)) * std::pow(10,power);
         char buf[100];
         double scale=1;
         if(r/std::pow(10,power)<2){
@@ -119,7 +119,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
             scale = 2;
         }
 
-        double majorTickDistance =  std::pow(10,power)*scale;
+        double majorTickDistance =  std::pow(10,power) * scale;
         for(double i = minMajorTick; i<range.max;i+= majorTickDistance){
             Pix p = cotrans(Coord2d(0.0,i));
             Pix p1 = box_coord(Pix(0,p.y));
@@ -138,13 +138,13 @@ void Axis::Render(SDL_Renderer* gRenderer,
         }
         
         power--;
-        double minMinorTick = (int(range.min/std::pow(10,power)))*std::pow(10,power);
+        double minMinorTick = (int(range.min/std::pow(10,power))) * std::pow(10,power);
         scale *=2;
 
         if(int(minMinorTick/std::pow(10,power))%2!=0){
             minMinorTick += std::pow(10,power);
         }
-        for(double i = minMinorTick; i<range.max;i+=std::pow(10,power)*scale ){
+        for(double i = minMinorTick; i<range.max;i+=std::pow(10,power) * scale ){
             Pix p = cotrans(Coord2d(0.0,i));
             Pix p1 = box_coord(Pix(0,p.y));
             Pix p2 = box_coord(Pix(4,p.y));

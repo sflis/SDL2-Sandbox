@@ -1,11 +1,13 @@
 #ifndef _FONTCACHE_H_
 #define _FONTCACHE_H_
 
-#include <SDL.h>
+#include "Utils.h"
+
+#include <SDL2/SDL.h>
 #include <map>
 #include <string>
 
-#include "Utils.h"
+
 
 
 class FontCache{
