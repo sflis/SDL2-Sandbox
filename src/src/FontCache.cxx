@@ -2,9 +2,30 @@
 #include <SDL2/SDL_ttf.h>
 #include <vector> 
 #include <iostream>
+#include <algorithm>
 
-
-FontCache::FontCache(SDL_Renderer* gRenderer,SDL_Color color):gRenderer(gRenderer){
+FontCache::FontCache(SDL_Renderer* gRenderer,
+                    SDL_Color color):
+                    gRenderer(gRenderer),
+                    defaultCachedFontSizes({5,
+                                            7, 
+                                            9,
+                                            11,
+                                            13,
+                                            15,
+                                            17,
+                                            19,
+                                            21,
+                                            23,
+                                            25,
+                                            27,
+                                            28,
+                                            31,
+                                            33,
+                                            35,
+                                            37,
+                                            39,
+                                            41}){
 
     TTF_Init();
     CacheFont(gRenderer, color);
@@ -12,32 +33,36 @@ FontCache::FontCache(SDL_Renderer* gRenderer,SDL_Color color):gRenderer(gRendere
 }
 
 void FontCache::CacheFont(SDL_Renderer* gRenderer, SDL_Color color){
-    TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", 80);
-    if (font == NULL) {
-        std::cout<<"Exiting... Falied to open font"<<std::endl;
-        // fprintf(stderr, "error: font not found\n");
-        exit(EXIT_FAILURE);
-    }
+    for(auto size : defaultCachedFontSizes){
+        TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", size);
+        if (font == NULL) {
+            std::cout<<"Exiting... Falied to open font"<<std::endl;
+            // fprintf(stderr, "error: font not found\n");
+            exit(EXIT_FAILURE);
+        }
 
-    //populating cache
-    char charbuff[2] = {0,0};//empty c-string
-    auto &ftc = fontTextureCache[color]; 
-    //iterating over ascii codes that are actual characters
-    for(int i = 32; i<126;i++){
-        charbuff[0] = i;
-        SDL_Surface* textSurface = TTF_RenderText_Blended(font, charbuff, color);
-        SDL_Texture* text = SDL_CreateTextureFromSurface(gRenderer, textSurface);
-        ftc[charbuff[0]] = {text,textSurface->w,textSurface->h};
-        SDL_FreeSurface(textSurface);   
-    }
-
+        //populating cache
+        char charbuff[2] = {0,0};//empty c-string
+        auto &ftc_s = fontTextureCache[color];
+        auto &ftc = ftc_s[size]; 
+        //iterating over ascii codes that are actual characters
+        for(int i = 32; i<126;i++){
+            charbuff[0] = i;
+            SDL_Surface* textSurface = TTF_RenderText_Blended(font, charbuff, color);
+            SDL_Texture* text = SDL_CreateTextureFromSurface(gRenderer, textSurface);
+            ftc[charbuff[0]] = {text,textSurface->w,textSurface->h};
+            SDL_FreeSurface(textSurface);   
+        }
     TTF_CloseFont(font);
+    }
 }
 
 FontCache::~FontCache(){
     for(auto &cachemap:fontTextureCache){
-        for(auto &cache: cachemap.second)
-            SDL_DestroyTexture(cache.second.texture);
+        for(auto &sizemap: cachemap.second){
+            for(auto &cache: sizemap.second)
+                SDL_DestroyTexture(cache.second.texture);
+        }
     }
 }
 
@@ -48,12 +73,21 @@ void FontCache::Render(std::string text,
                     int size,
                     TextAnchor tanchor,
                     bool wrap){
-
-    auto search = fontTextureCache.find(color);
-    if(search == fontTextureCache.end()){
+    
+    //Find color
+    auto colorSearch = fontTextureCache.find(color);
+    if(colorSearch == fontTextureCache.end()){
+        //if color not found then cache fonts with the desired color
         FontCache::CacheFont(gRenderer,color);
-        search = fontTextureCache.find(color);
+        colorSearch = fontTextureCache.find(color);
     }
+    //find closes matching cached font size
+    auto sizeSearch = colorSearch->second.lower_bound(size);
+    sizeSearch--;
+    if(sizeSearch == colorSearch->second.end()){
+        sizeSearch = colorSearch->second.upper_bound(size);
+    }
+    
     
     std::vector<char> tokens;//For now
     for(auto &c : text){
@@ -62,7 +96,7 @@ void FontCache::Render(std::string text,
 
     int n_tokens = tokens.size();
     bool math_mode = false;
-    for(int i = 0,row_pos=0,line=0; i<n_tokens; i++){
+    for(int i = 0, row_pos=0, line=0; i<n_tokens; i++){
         char t = tokens[i];
         if(t=='$'){
             if(math_mode)
@@ -71,6 +105,7 @@ void FontCache::Render(std::string text,
                 math_mode = true;    
         }
         double scale = 1.0;
+        
         switch(t){
             case '$':
                 if(math_mode)
@@ -92,18 +127,18 @@ void FontCache::Render(std::string text,
             row_pos=0;
         }
 
-        if(line*(size)>box.h)
+        if(line * (size) > box.h)
             break;
 
-        TextTextureCacheData &data =  search->second[t];
-        //To handle non-monospaced fonts correctly
-        //the width of the rendered character is scaled by the
-        //ratio of the width and height of the font character.
-        double dwdh = double(data.w)/data.h;
+        TextTextureCacheData &data =  sizeSearch->second[t];
         
-        SDL_Rect renderQuad = {box.x+row_pos, box.y+line*size, size*dwdh, size };    
+        //Scaling the font texture to sizes between cached font sizes
+        float cachedSizeRatio  = size/sizeSearch->first;
+        SDL_Rect renderQuad = {box.x + row_pos, 
+                                int(box.y + line * cachedSizeRatio * data.h), 
+                                int(cachedSizeRatio * data.w), 
+                                int(cachedSizeRatio * data.h)};    
         SDL_RenderCopy(gRenderer, data.texture, NULL, &renderQuad);
-        row_pos += size*dwdh;
+        row_pos += data.w;
     }
-    
 }

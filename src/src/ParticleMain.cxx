@@ -166,7 +166,7 @@ bool ParticleApp::OnInit() {
     //                             i
     //                             });
     // }
-    for(int i=0; i<16500;i++){
+    for(int i=0; i<1650;i++){
         double theta = uniform(0,2*M_PI);//th(e2);
         double d = uniform(0,1);//dist(e2);//veldist(e2);
         double r =sqrt(radius*radius*d);

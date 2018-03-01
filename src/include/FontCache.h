@@ -6,7 +6,7 @@
 #include <SDL2/SDL.h>
 #include <map>
 #include <string>
-
+#include <vector>
 
 
 
@@ -33,8 +33,9 @@ class FontCache{
 
     private:
         void CacheFont(SDL_Renderer* gRenderer, SDL_Color color);
-        std::map<SDL_Color, std::map<char, TextTextureCacheData> > fontTextureCache;  
+        std::map<SDL_Color, std::map<int, std::map<char, TextTextureCacheData> > > fontTextureCache;  
         SDL_Renderer* gRenderer;
+        std::vector<int> defaultCachedFontSizes;
 };
 
 

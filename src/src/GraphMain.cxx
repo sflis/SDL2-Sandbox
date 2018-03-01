@@ -197,8 +197,8 @@ void GraphApp::OnRender(){
     // std::cout<<"Created Figure"<<std::endl;
     t += 0.01;
     sprintf(str,"t =- %.3g",t);
-    tbox->Render(std::string("ja\nas dfghjklzxcvbnm"),
-                {100,50,80,400},
+    tbox->Render(std::string("ja\nAVWATi dfghjklzxcvbnm"),
+                {100,50,200,400},
                 renderer->Get(),
                 {255,0,255},
                 25);
