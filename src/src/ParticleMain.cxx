@@ -75,7 +75,7 @@ ParticleApp::ParticleApp() : running(true),
                     steps(0),
                     x({-100,100}),
                     y({-100,100}),
-                    trans(Rect({0,0,screen_width,screen_height*0.8}),x,y),
+                    trans(Rect({0,0,screen_width,int(screen_height * 0.8)}),x,y),
                     time(0),
                     animateTree(true),
                     traces(false),
@@ -166,11 +166,11 @@ bool ParticleApp::OnInit() {
     //                             i
     //                             });
     // }
-    for(int i=0; i<1650;i++){
+    for(int i=0; i<3650;i++){
         double theta = uniform(0,2*M_PI);//th(e2);
         double d = uniform(0,1);//dist(e2);//veldist(e2);
         double r =sqrt(radius*radius*d);
-        double vel = 0.00051;//veldist(e2);
+        double vel = 0.00015;//veldist(e2);
         particles.push_back({{20+r*cos(theta),10+r*sin(theta),0},
                                 {vel*(1500*r)*cos(theta+M_PI/2),vel*(1500*r)*sin(theta+M_PI/2),0},
                                 {0,0,0},
@@ -331,19 +331,33 @@ void ParticleApp::OnRender(){
         
         if(pix.x >=screen_width || pix.y>=screen_height || pix.x<0 || pix.y<0)
             continue;
+        
         const unsigned int offset = ( screen_width * 4 * pix.y ) + pix.x * 4;
         if(offset>pixels.size())
             continue;
+        for(int i = -1;i<2;i++){
+            for(int j = -1;j<2;j++){
+                const unsigned int offset = ( screen_width * 4 * (pix.y+i) ) + (pix.x+j) * 4;
+                if(offset<pixels.size()){
+                    if(pixels[ offset + 0 ]<235){
+                        pixels[ offset + 0 ] += 20;
+                        pixels[ offset + 1 ] += 20;
+                        pixels[ offset + 2 ] += 20;
+                        pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;
+                    }                    
+                }
+            }
+        }
 
         // std::cout<<offset<<std::endl;
-        int g = 255;    
-        int r = 0;
-        auto color = hex2rgb(i*10000+230);
+        // int g = 255;    
+        // int r = 0;
+        // auto color = hex2rgb(i*10000+230);
 
-        pixels[ offset + 0 ] = int(255*((vel-minVel)/velRange));//;color.b;        // b
-        pixels[ offset + 1 ] = vel>minVel+velRange*0.5 ? int(255*((maxVel-vel)/velRange)) :int(255*((vel-minVel)/velRange));//int(255*((vel-minVel)/velRange));//color.g;        // g
-        pixels[ offset + 2 ] = int(255*((maxVel-vel)/velRange));//color.r;        // r
-        pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;    // a
+        // pixels[ offset + 0 ] = int(255*((vel-minVel)/velRange));//;color.b;        // b
+        // pixels[ offset + 1 ] = vel>minVel+velRange*0.5 ? int(255*((maxVel-vel)/velRange)) :int(255*((vel-minVel)/velRange));//int(255*((vel-minVel)/velRange));//color.g;        // g
+        // pixels[ offset + 2 ] = int(255*((maxVel-vel)/velRange));//color.r;        // r
+        // pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;    // a
         i++;
     }
     kineticEnergy.push_back(log10(energy));

@@ -70,8 +70,8 @@ inline Pix CoordinateTrans::Coord2d2Pix(Coord2d pos){
     Pix outpix;
     double xrange = x.max-x.min;
     double yrange = y.max-y.min;
-    outpix.x = (pos.x-x.min )/xrange*outer.w;
-    outpix.y = outer.h-(pos.y-y.min )/yrange*outer.h;
+    outpix.x = (pos.x-x.min )/ xrange * outer.w;
+    outpix.y = outer.h-(pos.y-y.min )/ yrange * outer.h;
     return outpix;
 }
 
