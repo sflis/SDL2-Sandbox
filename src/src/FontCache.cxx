@@ -34,7 +34,7 @@ FontCache::FontCache(SDL_Renderer* gRenderer,
 
 void FontCache::CacheFont(SDL_Renderer* gRenderer, SDL_Color color){
     for(auto size : defaultCachedFontSizes){
-        TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSans.ttf", size);
+        TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", size);
         if (font == NULL) {
             std::cout<<"Exiting... Falied to open font"<<std::endl;
             // fprintf(stderr, "error: font not found\n");

@@ -64,31 +64,39 @@ class ParticleApp {
         bool animateTree;
         bool traces;
         bool barnesHut;
+        int visualizationState;
+        int nVisualizationStates;
+        bool particleTag;
+        int particleID;
 };
 
 
 
 
-ParticleApp::ParticleApp() : running(true),
-                    screen_width(1200),
+ParticleApp::ParticleApp():running(true),
+                    screen_width(1600),
                     screen_height(900),
                     steps(0),
-                    x({-100,100}),
+                    x({-100*double(screen_width)/screen_height,100*double(screen_width)/screen_height}),
                     y({-100,100}),
                     trans(Rect({0,0,screen_width,int(screen_height * 0.8)}),x,y),
                     time(0),
                     animateTree(true),
                     traces(false),
-                    barnesHut(true)
+                    barnesHut(true),
+                    visualizationState(0),
+                    nVisualizationStates(2),
+                    particleTag(false),
+                    particleID(0)
                     {};
-
+//=============================================================================
 ParticleApp::~ParticleApp(){
 
     //Quit SDL subsystems
     SDL_Quit();
 } 
 
-
+//=============================================================================
 int ParticleApp::OnExecute() {
     if(OnInit() == false) {
         return -1;
@@ -110,12 +118,13 @@ int ParticleApp::OnExecute() {
  
     return 0;
 }
-
+//=============================================================================
 double uniform(double min,double max){
     double r = (std::rand()%RAND_MAX)/double(RAND_MAX);
     double range = max-min;
     return min +r*range;
 }
+//=============================================================================
 
 bool ParticleApp::OnInit() {
     std::srand(3);
@@ -129,7 +138,7 @@ bool ParticleApp::OnInit() {
     else{
         //Create window
 
-        window = sdl2::make_window("Graph2", SDL_WINDOWPOS_UNDEFINED, 
+        window = sdl2::make_window("Particles", SDL_WINDOWPOS_UNDEFINED, 
                           SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, SDL_WINDOW_SHOWN);
         renderer = std::make_shared<sdl2::Renderer>(window,-1, SDL_RENDERER_ACCELERATED);
 
@@ -166,7 +175,7 @@ bool ParticleApp::OnInit() {
     //                             i
     //                             });
     // }
-    for(int i=0; i<3650;i++){
+    for(int i=0; i<13650;i++){
         double theta = uniform(0,2*M_PI);//th(e2);
         double d = uniform(0,1);//dist(e2);//veldist(e2);
         double r =sqrt(radius*radius*d);
@@ -202,7 +211,7 @@ bool ParticleApp::OnInit() {
                                 {0,0,0},
                                 {0,0,0},
                                 10.0,
-                                100,
+                                200,
                                 10000
                                 });
     sim = new ParticleSimulation(x.min,x.max,y.min,y.max,particles);    
@@ -210,7 +219,7 @@ bool ParticleApp::OnInit() {
     tbox = new FontCache(renderer->Get(),c);
     return true;
 }
-
+//=============================================================================
 void ParticleApp::OnEvent(SDL_Event* event){
     
         if(event->type == SDL_QUIT){
@@ -235,12 +244,34 @@ void ParticleApp::OnEvent(SDL_Event* event){
                 case SDLK_b:    
                     barnesHut = barnesHut ? false:true;
                     break;
+                case SDLK_p:    
+                    particleTag = particleTag ? false:true;
+                    break;                    
+                case SDLK_LEFT:
+                    if(particleTag){
+                        particleID--;
+                        if(particleID<0)
+                            particleID = sim->GetParticles().size()-1;
+                    }
+                    break;
+                case SDLK_RIGHT:
+                    if(particleTag){
+                        particleID++;
+                        if(particleID>=sim->GetParticles().size())
+                            particleID = 0;
+                    }
+                    break;
+                case SDLK_c:    
+                    visualizationState++;
+                    if(visualizationState>nVisualizationStates)
+                        visualizationState = 0;
+                    break;
             }
         }
 
     
 }
- 
+//=============================================================================
 void ParticleApp::OnLoop(){
     double dt = 0.0005;
     for(int i = 0; i<10;i++){
@@ -261,7 +292,7 @@ void ParticleApp::OnLoop(){
     // time+=dt;
     timeVector.push_back(time);
 }
-
+//=============================================================================
 void RenderNode(QuadTree::Node &node, sdl2::Renderer &renderer,CoordinateTrans trans){
 
     if(node.type == QuadTree::Node::EmptyLeaf or node.type == QuadTree::Node::ParticleLeaf){
@@ -280,36 +311,73 @@ void RenderNode(QuadTree::Node &node, sdl2::Renderer &renderer,CoordinateTrans t
     for(auto &n: node.nodes)
         RenderNode(*n,renderer,trans);
 }
-
-void RenderTree(sdl2::Renderer &renderer, QuadTree &tree,CoordinateTrans trans){
+//=============================================================================
+void RenderTree(sdl2::Renderer &renderer, QuadTree &tree, CoordinateTrans trans){
     QuadTree::Node &root = tree.GetRoot();
     SDL_SetRenderDrawColor( renderer.Get(), 115, 115, 115, 0xFF );
     RenderNode(root, renderer,trans);
 
 }
+//=============================================================================
+void renderTaggetParticle(int particleID, 
+                            const std::vector<Particle> &particles, 
+                            std::vector< unsigned char > &pixels,
+                            CoordinateTrans trans,
+                            int screen_height,
+                            int screen_width,
+                            sdl2::Renderer &renderer,
+                            FontCache &tbox ){
+    auto p = particles[particleID];
+    auto pix = trans(p.pos[0],p.pos[1]);
+        
+    if(pix.x >=screen_width || pix.y>=screen_height || pix.x<0 || pix.y<0)
+        return;
+    // const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
+    // if(offset<pixels.size() )
+        // return;
+    renderer.SetDrawColor(0,255,0,0xFF);
+    for(int i = -1;i<2;i++){
+        for(int j = -1;j<2;j++){
+            //const unsigned int offset = ( screen_width * 4 * (pix.y+i) ) + (pix.x+j) * 4;
+            // if(offset<pixels.size() && abs(i)+abs(j)<2){
+                SDL_RenderDrawPoint(renderer.Get(),pix.x+j,pix.y+i);
+                // pixels[ offset + 0 ] = 0;
+                // pixels[ offset + 1 ] = 255;
+                // pixels[ offset + 2 ] = 0;
+                // pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;
+            // }
+        }
+    }
+    char str[300];
+    sprintf(str,"Particle ID: %d \nMass: %.3g \nPosition: (%5.3g, %5.3g)\nVelocity: (%5.3g,%5.3g)\n Hej svej  dubbel   pastej.  .",
+        particleID,p.mass,p.pos[0],p.pos[1],p.vel[0],p.vel[1]);
+    // std::cout<<str;   
+    tbox.Render(std::string(str),{0,0,300,100},renderer.Get(),{255,255,255,0xFF},14);
 
+}
+//=============================================================================
 void ParticleApp::OnRender(){
     last = now;
     now = SDL_GetPerformanceCounter();
-    deltaTime = (double)((now - last)*1000 / SDL_GetPerformanceFrequency() );
+    deltaTime = (double)((now - last) * 1000 / SDL_GetPerformanceFrequency() );
     SDL_Rect mainViewport = {0,
-                            int(screen_height*0.2),
+                            int(screen_height * 0.2),
                             screen_width,
-                            int(screen_height*0.8)};
+                            int(screen_height * 0.8)};
 
 
     int occupied = 0;
     auto particles =sim->GetParticles();
     QuadTree tree;
-    // std::cout<<"Building Tree"<<std::endl;
+
     if(animateTree)
         tree.BuildTree(particles);
-    // std::cout<<"Build Tree"<<std::endl;
 
     auto p = particles[0];
-    // std::cout<<p.pos[0]<<" "<<p.pos[1]<<std::endl;
+
     if(!traces)
         std::fill(pixels.begin(), pixels.end(), 0);
+
     int i = 0;
     double energy = 0;
     double maxVel = 0, minVel=1e300;
@@ -325,39 +393,61 @@ void ParticleApp::OnRender(){
 
     for(auto &p:particles){
         double vel = sqrt(p.vel[0]*p.vel[0]+p.vel[1]*p.vel[1]);
-        energy += vel*vel*p.mass/2;
+        energy += vel*vel*p.mass/2;     
         auto pix = trans(p.pos[0],p.pos[1]);
-        // std::cout<<pix.x<<" "<<pix.y<<std::endl;
         
         if(pix.x >=screen_width || pix.y>=screen_height || pix.x<0 || pix.y<0)
             continue;
-        
-        const unsigned int offset = ( screen_width * 4 * pix.y ) + pix.x * 4;
-        if(offset>pixels.size())
-            continue;
-        for(int i = -1;i<2;i++){
-            for(int j = -1;j<2;j++){
-                const unsigned int offset = ( screen_width * 4 * (pix.y+i) ) + (pix.x+j) * 4;
-                if(offset<pixels.size()){
-                    if(pixels[ offset + 0 ]<235){
-                        pixels[ offset + 0 ] += 20;
-                        pixels[ offset + 1 ] += 20;
-                        pixels[ offset + 2 ] += 20;
-                        pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;
-                    }                    
+                
+        const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
+        switch(visualizationState){
+            case 0:
+                for(int i = -1;i<2;i++){
+                    for(int j = -1;j<2;j++){
+                        const unsigned int offset = ( screen_width * 4 * (pix.y+i) ) + (pix.x+j) * 4;
+                        if(offset<pixels.size() && abs(i)+abs(j)<2){
+                            if(pixels[ offset + 0 ]<235){
+                                pixels[ offset + 0 ] += 20;
+                                pixels[ offset + 1 ] += 20;
+                                pixels[ offset + 2 ] += 20;
+                                pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;
+                            }                    
+                        }
+                    }
                 }
-            }
+
+                {
+                    const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
+                        if(offset<pixels.size() ){
+                            if(pixels[ offset + 0 ]<235){
+                                pixels[ offset + 0 ] += 20;
+                                pixels[ offset + 1 ] += 20;
+                                pixels[ offset + 2 ] += 20;
+                                pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;
+                            }                    
+                        }
+                }
+                break;
+            case 1:
+                {
+                
+                    const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
+                    // std::cout<<offset<<std::endl;
+                    int g = 255;    
+                    int r = 0;
+                    auto color = hex2rgb(i*10000+230);
+                    if(offset<pixels.size() ){
+                        pixels[ offset + 0 ] = int(255*((vel-minVel)/velRange));//;color.b;        // b
+                        pixels[ offset + 1 ] = vel>minVel+velRange*0.5 ? int(255*((maxVel-vel)/velRange)) :int(255*((vel-minVel)/velRange));//int(255*((vel-minVel)/velRange));//color.g;        // g
+                        pixels[ offset + 2 ] = int(255*((maxVel-vel)/velRange));//color.r;        // r
+                        pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;    // a
+                    }
+                }   
+                break;
+            default:
+                visualizationState =0;
         }
 
-        // std::cout<<offset<<std::endl;
-        // int g = 255;    
-        // int r = 0;
-        // auto color = hex2rgb(i*10000+230);
-
-        // pixels[ offset + 0 ] = int(255*((vel-minVel)/velRange));//;color.b;        // b
-        // pixels[ offset + 1 ] = vel>minVel+velRange*0.5 ? int(255*((maxVel-vel)/velRange)) :int(255*((vel-minVel)/velRange));//int(255*((vel-minVel)/velRange));//color.g;        // g
-        // pixels[ offset + 2 ] = int(255*((maxVel-vel)/velRange));//color.r;        // r
-        // pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;    // a
         i++;
     }
     kineticEnergy.push_back(log10(energy));
@@ -365,6 +455,8 @@ void ParticleApp::OnRender(){
     // std::cout<<"Rendered particles "<<std::endl;
     // std::cout<<energy<<std::endl;
     renderer->SetViewPort(mainViewport);
+
+
     SDL_UpdateTexture(texture,
         NULL,
         &pixels[0],
@@ -372,8 +464,18 @@ void ParticleApp::OnRender(){
         );
 
     SDL_RenderCopy( renderer->Get(), texture, NULL, NULL );
+    if(particleTag) 
+        renderTaggetParticle(particleID, particles, 
+                            pixels,
+                            trans,
+                            screen_height,
+                            screen_width,
+                            *renderer,
+                            *tbox);
+
     if(animateTree) 
         RenderTree(*renderer, tree,trans);
+
     // std::cout<<"Rendered Tree"<<std::endl;
 
     SDL_Rect plotViewport = {0,0,screen_width,int(screen_height*0.2)};
@@ -407,11 +509,11 @@ void ParticleApp::OnRender(){
     renderer->Present() ;
     SDL_Delay(5);
 }
-
+//=============================================================================
 void ParticleApp::OnCleanup(){
 
 }
-
+//=============================================================================
 int main(int argc, char **argv){
 
     ParticleApp theApp;

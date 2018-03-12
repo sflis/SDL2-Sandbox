@@ -159,7 +159,7 @@ void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
                 double dx = p.pos[0] - tp->pos[0];
                 double dy = p.pos[1] - tp->pos[1];
                 double r = sqrt(dx*dx + dy*dy);
-                if(r<1e-3)
+                if(r<1e-2)
                     continue;
                 double norm = tp->mass;
                 double acc = norm * forceField(r);

@@ -18,6 +18,7 @@ class QuadTree{
     public:
         QuadTree(int maxDepth = 150, double minSize=1e-6);
         void BuildTree(std::vector<Particle> &particles);
+        bool CondAddParticle(Particle *par, double dist);    
         class Node{
             public:
                 enum NodeType{uninitialized,EmptyLeaf,node, ParticleLeaf};
@@ -25,9 +26,9 @@ class QuadTree{
                 Point p;
                 double size;
                 void AddParticle(Particle *par,QuadTree &tree);
-            // private:
+                
+
                 std::vector<std::shared_ptr<Node> > nodes;// std::array<std::shared_ptr<Node>,4> nodes;
-                // std::weak_ptr<Particle> particle;
                 std::vector<Particle*> particles;
                 NodeType type;
                 int depth;
