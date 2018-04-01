@@ -43,8 +43,6 @@ FIND_PACKAGE(Boost REQUIRED)
 
 include_directories(
     include
-#    #${GLM_INCLUDE}
-    #${GLFW}
     ${SDL2_INCLUDE_DIR}
 )
 
@@ -55,7 +53,12 @@ add_executable(Graph src/GraphMain.cxx src/FontCache.cxx src/Graph.cxx)
 
 #add_executable(Graph2 src/GraphMain2.cxx src/FontCache.cxx src/Graph.cxx)
 
-add_executable(Particles src/ParticleMain.cxx src/ParticleSimulation.cxx src/FontCache.cxx src/Graph.cxx src/QuadTree.cxx)
+add_executable(Particles src/ParticleMain.cxx 
+                        src/ParticleSimulation.cxx 
+                        src/FontCache.cxx 
+                        src/Graph.cxx 
+                        src/QuadTree.cxx
+                        src/colormap.cxx)
 
 add_executable(ParticlesNoGui src/ParticlesNoGui.cxx src/ParticleSimulation.cxx src/QuadTree.cxx)
 
