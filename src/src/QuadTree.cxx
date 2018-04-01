@@ -36,6 +36,71 @@ void QuadTree::BuildTree(std::vector<Particle> &particles){
 
 }
 
+bool QuadTree::CondParticleAdd(Particle *par, double dist){
+    
+
+    // Point range = {max.x-min.x,max.y-min.y};
+    // Point origo = {(max.x+min.x)/2,(max.y+min.y)/2};
+    // double side = (range.x>range.y ? range.x : range.y)*1.1;
+    // root.p = origo;
+    // root.size = side;
+    
+    // if( fabs(root.p[0]-par->pos[0]) > root.size ||
+    //     fabs(root.p[1]-par->pos[1]) > root.size){
+    //     Point origo = {(max.x+min.x)/2,(max.y+min.y)/2};
+    //     if(root.size==0){
+    //         double side = (range.x>range.y ? range.x : range.y)*1.1;
+    //     }
+    //     double side = root.size * 2;
+    //     origo = root.p;
+    //     root.size;    
+
+    //     auto oldRoot = std::shared_ptr<Node>(new Node(root));
+
+        
+    // }
+
+    // bool success;
+    // for(auto  &p: particles){
+    //     auto node = root.AddParticle(&p, *this)
+        
+    //     if(){
+    //         success=true;
+    //         break;
+    //     }
+    // }
+    // return success;
+}
+
+
+
+
+QuadTree::Node& QuadTree::Node::DryAdd(Particle *par, QuadTree &tree){
+    if(type==Node::EmptyLeaf){
+        
+        return *this;
+    }
+    else if(type==Node::node){
+
+        if(par->pos[0]>=p.x){
+            if(par->pos[1]>=p.y)
+                nodes[0]->DryAdd(par,tree);
+            else
+                nodes[1]->DryAdd(par,tree);
+        }
+        else{
+            if(par->pos[1]<p.y)
+                nodes[2]->DryAdd(par,tree);
+            else
+                nodes[3]->DryAdd(par,tree);       
+        }       
+    }
+    else{
+        return *this;
+
+    }    
+}
+
 void QuadTree::Node::AddParticle(Particle *par,QuadTree &tree){
     totalMass += par->mass;
     centerOfMass.x += par->mass * par->pos[0];
@@ -122,3 +187,4 @@ QuadTree::Node::Node(Point point,
 
 
 }
+
