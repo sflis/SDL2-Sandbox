@@ -4,6 +4,7 @@
 #include "GIW_SDL2.h"
 #include "Utils.h"
 #include "QuadTree.h"
+#include "colormap.h"
 
 #include <cstdlib>
 #include <SDL2/SDL.h>
@@ -85,7 +86,7 @@ ParticleApp::ParticleApp():running(true),
                     traces(false),
                     barnesHut(true),
                     visualizationState(0),
-                    nVisualizationStates(2),
+                    nVisualizationStates(4),
                     particleTag(false),
                     particleID(0)
                     {};
@@ -175,7 +176,7 @@ bool ParticleApp::OnInit() {
     //                             i
     //                             });
     // }
-    for(int i=0; i<13650;i++){
+    for(int i=0; i<3650;i++){
         double theta = uniform(0,2*M_PI);//th(e2);
         double d = uniform(0,1);//dist(e2);//veldist(e2);
         double r =sqrt(radius*radius*d);
@@ -355,6 +356,7 @@ void renderTaggetParticle(int particleID,
     tbox.Render(std::string(str),{0,0,300,100},renderer.Get(),{255,255,255,0xFF},14);
 
 }
+
 //=============================================================================
 void ParticleApp::OnRender(){
     last = now;
@@ -390,6 +392,37 @@ void ParticleApp::OnRender(){
 
     }
     double velRange = maxVel-minVel;
+    
+    int n = 1028;
+    unsigned char colormap[n*3];
+    ColorMap::PLSequentialBlackBody(n, &colormap[0]);
+    std::vector<double> histogram(pixels.size()/4,0);
+    switch(visualizationState){
+        case 3:
+            {
+               
+                for(auto &p:particles){
+                    auto pix = trans(p.pos[0],p.pos[1]);
+                    if(pix.x >=screen_width || pix.y>=screen_height || pix.x<0 || pix.y<0)
+                        continue;
+                    for(int i = -1;i<2;i++){
+                        for(int j = -1;j<2;j++){
+                            const unsigned int index = ( screen_width  * (pix.y+i) ) + (pix.x+j) ;
+                            if(index<pixels.size() ){
+                                histogram[index]+=70.0/(1+abs(i)+abs(j));
+
+
+                            }
+                        }
+                    }                            
+                }
+            }
+            break;
+
+        default:
+        break;
+    }
+    
 
     for(auto &p:particles){
         double vel = sqrt(p.vel[0]*p.vel[0]+p.vel[1]*p.vel[1]);
@@ -436,6 +469,7 @@ void ParticleApp::OnRender(){
                     int g = 255;    
                     int r = 0;
                     auto color = hex2rgb(i*10000+230);
+
                     if(offset<pixels.size() ){
                         pixels[ offset + 0 ] = int(255*((vel-minVel)/velRange));//;color.b;        // b
                         pixels[ offset + 1 ] = vel>minVel+velRange*0.5 ? int(255*((maxVel-vel)/velRange)) :int(255*((vel-minVel)/velRange));//int(255*((vel-minVel)/velRange));//color.g;        // g
@@ -444,12 +478,55 @@ void ParticleApp::OnRender(){
                     }
                 }   
                 break;
+            case 2:
+                {
+                
+                    const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
+                    int i = int(n*(vel-minVel)/velRange);
+                    if(offset<pixels.size() ){
+                        pixels[ offset + 0 ] = colormap[i];
+                        pixels[ offset + 1 ] = colormap[i+1];
+                        pixels[ offset + 2 ] = colormap[i+2];
+                        pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;    // a
+                    }
+                }   
+                break;
+            case 3:
+                {
+                for(int i = -1;i<2;i++){
+                    for(int j = -1;j<2;j++){    
+                        const  int pixoffset = ( screen_width * 4 * (pix.y+i) ) + (pix.x+j) * 4;
+                        const  int index = ( screen_width  * (pix.y+i) ) + (pix.x+j) ;
+                        if(index>-1 && index<histogram.size()){
+                            int i = histogram[index];
+                            if(i>=n)
+                                i = n-1;
+                            if(pixoffset > -1 && pixoffset< (pixels.size()-3) ){
+                                    pixels[ pixoffset + 0 ] = colormap[i*3+2];
+                                    pixels[ pixoffset + 1 ] = colormap[i*3+1];
+                                    pixels[ pixoffset + 2 ] = colormap[i*3];
+                                    pixels[ pixoffset + 3 ] = SDL_ALPHA_OPAQUE;    // a
+                            }
+                        }
+                    }
+                }
+                }
+                break;
             default:
                 visualizationState =0;
         }
 
         i++;
     }
+    // for(int i = 0; i<n;i++){
+    //     for(int j = 0; j<100;j++){
+    //         pixels[screen_width * 4 * j + 4*i + 0 ] = colormap[i*3+2];
+    //         pixels[screen_width * 4 * j + 4*i + 1 ] = colormap[i*3+1];
+    //         pixels[screen_width * 4 * j + 4*i + 2 ] = colormap[i*3+0];
+    //         pixels[screen_width * 4 * j + 4*i + 3 ] = SDL_ALPHA_OPAQUE;
+    //     }
+    // }
+
     kineticEnergy.push_back(log10(energy));
 
     // std::cout<<"Rendered particles "<<std::endl;
@@ -484,7 +561,7 @@ void ParticleApp::OnRender(){
 
     auto fig = Figure(renderer,tbox);
     fig.Plot(timeVector,kineticEnergy,blue);
-    Range range = {0.0,log10(energy)*1.1};
+    Range range = {4.8,log10(energy)*1.1};
     fig.SetYLim(range);
 
     fig.Render(plotViewport);
