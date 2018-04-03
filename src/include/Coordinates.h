@@ -92,9 +92,10 @@ inline Pix CoordinateTrans::operator()(double xx, double yy){
 
 inline Coord2d CoordinateTrans::Pix2Coord2d(Pix pix){
     Coord2d outCoord(0,0);
-    double xrange = x.max-x.min;
-    double yrange = y.max-y.min; 
+    // double xrange = x.max-x.min;
+    // double yrange = y.max-y.min; 
     outCoord.x = pix.x-outer.x;
+    return outCoord;
 }
 
 #endif

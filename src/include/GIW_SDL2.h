@@ -33,6 +33,21 @@ namespace sdl2{
                              window.get(),index,flags);
     }
 
+    using texture_ptr_t = std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>;
+    using texture_ptr_t_shr = std::shared_ptr<SDL_Texture>;
+
+
+
+
+    inline texture_ptr_t make_texture(SDL_Renderer *renderer,
+                            uint32_t format,
+                            int access,
+                            int w,
+                            int h) {
+        return make_resource(SDL_CreateTexture, SDL_DestroyTexture,
+                            renderer, format, access, w, h);
+    }    
+
     class Renderer{
         public:
             Renderer():window(make_window("App Name", SDL_WINDOWPOS_UNDEFINED, 

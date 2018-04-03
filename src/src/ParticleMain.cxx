@@ -45,7 +45,7 @@ class ParticleApp {
         int screen_width;
         int screen_height;
 
-        std::vector< unsigned char > pixels;
+        // std::vector< unsigned char > pixels;
 
         SDL_Texture* texture;
         ParticleSimulation *sim;
@@ -68,7 +68,8 @@ class ParticleApp {
         int visualizationState;
         int nVisualizationStates;
         bool particleTag;
-        int particleID;
+        uint32_t particleID;
+        RawPixelMap_ptr_t_shr rpixmap;
 };
 
 
@@ -129,7 +130,7 @@ double uniform(double min,double max){
 
 bool ParticleApp::OnInit() {
     std::srand(3);
-    pixels.resize( int(screen_height*0.8) * screen_width * 4);
+    // pixels.resize( int(screen_height*0.8) * screen_width * 4);
 
     //Initialize SDL
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ){
@@ -146,6 +147,8 @@ bool ParticleApp::OnInit() {
         renderer->SetDrawColor(0,0,0,0);
         // SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"); 
         // SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1"); 
+        rpixmap = std::make_shared<RawPixelMap>(renderer->Get(),screen_width, screen_height);
+
         texture = SDL_CreateTexture(
                                 renderer->Get(),
                                     SDL_PIXELFORMAT_ARGB8888,
@@ -216,7 +219,7 @@ bool ParticleApp::OnInit() {
                                 10000
                                 });
     sim = new ParticleSimulation(x.min,x.max,y.min,y.max,particles);    
-    SDL_Color c = {0,0,0};
+    SDL_Color c = {0,0,0,0xFF};
     tbox = new FontCache(renderer->Get(),c);
     return true;
 }
@@ -250,8 +253,9 @@ void ParticleApp::OnEvent(SDL_Event* event){
                     break;                    
                 case SDLK_LEFT:
                     if(particleTag){
-                        particleID--;
-                        if(particleID<0)
+                        if(particleID>0)
+                            particleID--;
+                        else
                             particleID = sim->GetParticles().size()-1;
                     }
                     break;
@@ -320,7 +324,7 @@ void RenderTree(sdl2::Renderer &renderer, QuadTree &tree, CoordinateTrans trans)
 
 }
 //=============================================================================
-void renderTaggetParticle(int particleID, 
+void renderTaggedParticle(int particleID, 
                             const std::vector<Particle> &particles, 
                             std::vector< unsigned char > &pixels,
                             CoordinateTrans trans,
@@ -333,26 +337,15 @@ void renderTaggetParticle(int particleID,
         
     if(pix.x >=screen_width || pix.y>=screen_height || pix.x<0 || pix.y<0)
         return;
-    // const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
-    // if(offset<pixels.size() )
-        // return;
     renderer.SetDrawColor(0,255,0,0xFF);
     for(int i = -1;i<2;i++){
         for(int j = -1;j<2;j++){
-            //const unsigned int offset = ( screen_width * 4 * (pix.y+i) ) + (pix.x+j) * 4;
-            // if(offset<pixels.size() && abs(i)+abs(j)<2){
                 SDL_RenderDrawPoint(renderer.Get(),pix.x+j,pix.y+i);
-                // pixels[ offset + 0 ] = 0;
-                // pixels[ offset + 1 ] = 255;
-                // pixels[ offset + 2 ] = 0;
-                // pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;
-            // }
         }
     }
     char str[300];
-    sprintf(str,"Particle ID: %d \nMass: %.3g \nPosition: (%5.3g, %5.3g)\nVelocity: (%5.3g,%5.3g)\n Hej svej  dubbel   pastej.  .",
+    sprintf(str,"Particle ID: %d \nMass: %.3g \nPosition: (%5.3g, %5.3g)\nVelocity: (%5.3g,%5.3g).",
         particleID,p.mass,p.pos[0],p.pos[1],p.vel[0],p.vel[1]);
-    // std::cout<<str;   
     tbox.Render(std::string(str),{0,0,300,100},renderer.Get(),{255,255,255,0xFF},14);
 
 }
@@ -368,15 +361,14 @@ void ParticleApp::OnRender(){
                             int(screen_height * 0.8)};
 
 
-    int occupied = 0;
     auto particles =sim->GetParticles();
     QuadTree tree;
 
     if(animateTree)
         tree.BuildTree(particles);
 
-    auto p = particles[0];
 
+    auto &pixels = rpixmap->GetMap();
     if(!traces)
         std::fill(pixels.begin(), pixels.end(), 0);
 
@@ -391,12 +383,13 @@ void ParticleApp::OnRender(){
             minVel=vel;
 
     }
-    double velRange = maxVel-minVel;
+    double velRange = maxVel - minVel;
     
     int n = 1028;
     unsigned char colormap[n*3];
     ColorMap::PLSequentialBlackBody(n, &colormap[0]);
     std::vector<double> histogram(pixels.size()/4,0);
+    
     switch(visualizationState){
         case 3:
             {
@@ -432,7 +425,6 @@ void ParticleApp::OnRender(){
         if(pix.x >=screen_width || pix.y>=screen_height || pix.x<0 || pix.y<0)
             continue;
                 
-        const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
         switch(visualizationState){
             case 0:
                 for(int i = -1;i<2;i++){
@@ -463,50 +455,38 @@ void ParticleApp::OnRender(){
                 break;
             case 1:
                 {
-                
-                    const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
-                    // std::cout<<offset<<std::endl;
-                    int g = 255;    
-                    int r = 0;
-                    auto color = hex2rgb(i*10000+230);
-
-                    if(offset<pixels.size() ){
-                        pixels[ offset + 0 ] = int(255*((vel-minVel)/velRange));//;color.b;        // b
-                        pixels[ offset + 1 ] = vel>minVel+velRange*0.5 ? int(255*((maxVel-vel)/velRange)) :int(255*((vel-minVel)/velRange));//int(255*((vel-minVel)/velRange));//color.g;        // g
-                        pixels[ offset + 2 ] = int(255*((maxVel-vel)/velRange));//color.r;        // r
-                        pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;    // a
-                    }
+                    rpixmap->SetPixel(pix.x, pix.y, 
+                                {uint8_t(255*((vel-minVel)/velRange)),
+                                vel>minVel+velRange*0.5 ? uint8_t(255*((maxVel-vel)/velRange)) :uint8_t(255*((vel-minVel)/velRange)),
+                                uint8_t(255*((maxVel-vel)/velRange)),
+                                SDL_ALPHA_OPAQUE});
                 }   
                 break;
             case 2:
                 {
-                
-                    const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
-                    int i = int(n*(vel-minVel)/velRange);
-                    if(offset<pixels.size() ){
-                        pixels[ offset + 0 ] = colormap[i];
-                        pixels[ offset + 1 ] = colormap[i+1];
-                        pixels[ offset + 2 ] = colormap[i+2];
-                        pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;    // a
-                    }
+                    uint32_t i = int(n*(vel-minVel)/velRange);
+                    rpixmap->SetPixel(pix.x, pix.y, 
+                                {colormap[i*3+2],
+                                colormap[i*3+1],
+                                colormap[i*3],
+                                SDL_ALPHA_OPAQUE});
+
                 }   
                 break;
             case 3:
                 {
                 for(int i = -1;i<2;i++){
                     for(int j = -1;j<2;j++){    
-                        const  int pixoffset = ( screen_width * 4 * (pix.y+i) ) + (pix.x+j) * 4;
-                        const  int index = ( screen_width  * (pix.y+i) ) + (pix.x+j) ;
-                        if(index>-1 && index<histogram.size()){
-                            int i = histogram[index];
-                            if(i>=n)
-                                i = n-1;
-                            if(pixoffset > -1 && pixoffset< (pixels.size()-3) ){
-                                    pixels[ pixoffset + 0 ] = colormap[i*3+2];
-                                    pixels[ pixoffset + 1 ] = colormap[i*3+1];
-                                    pixels[ pixoffset + 2 ] = colormap[i*3];
-                                    pixels[ pixoffset + 3 ] = SDL_ALPHA_OPAQUE;    // a
-                            }
+                        if(pix.y+i<0 || pix.x+j<0)
+                            continue;
+                        const  uint64_t index = ( screen_width  * (pix.y+i) ) + (pix.x+j) ;
+                        if(index<histogram.size()){                            
+                            int k = histogram[index];
+                            rpixmap->SetPixel(pix.x+j, pix.y+i, 
+                                {colormap[k*3+2],
+                                colormap[k*3+1],
+                                colormap[k*3],
+                                SDL_ALPHA_OPAQUE});
                         }
                     }
                 }
@@ -518,14 +498,6 @@ void ParticleApp::OnRender(){
 
         i++;
     }
-    // for(int i = 0; i<n;i++){
-    //     for(int j = 0; j<100;j++){
-    //         pixels[screen_width * 4 * j + 4*i + 0 ] = colormap[i*3+2];
-    //         pixels[screen_width * 4 * j + 4*i + 1 ] = colormap[i*3+1];
-    //         pixels[screen_width * 4 * j + 4*i + 2 ] = colormap[i*3+0];
-    //         pixels[screen_width * 4 * j + 4*i + 3 ] = SDL_ALPHA_OPAQUE;
-    //     }
-    // }
 
     kineticEnergy.push_back(log10(energy));
 
@@ -542,7 +514,7 @@ void ParticleApp::OnRender(){
 
     SDL_RenderCopy( renderer->Get(), texture, NULL, NULL );
     if(particleTag) 
-        renderTaggetParticle(particleID, particles, 
+        renderTaggedParticle(particleID, particles, 
                             pixels,
                             trans,
                             screen_height,
