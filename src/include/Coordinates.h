@@ -29,7 +29,7 @@ struct Pix{
 };
 
 struct Coord2d{
-    Coord2d(double x,double y):x(x),y(y){}
+    // Coord2d(double x,double y):x(x),y(y){}
     double x;
     double y;
 };
@@ -91,7 +91,7 @@ inline Pix CoordinateTrans::operator()(double xx, double yy){
 }
 
 inline Coord2d CoordinateTrans::Pix2Coord2d(Pix pix){
-    Coord2d outCoord(0,0);
+    Coord2d outCoord;
     // double xrange = x.max-x.min;
     // double yrange = y.max-y.min; 
     outCoord.x = pix.x-outer.x;

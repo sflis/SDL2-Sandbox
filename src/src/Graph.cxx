@@ -42,7 +42,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
         }
         double majorTickDistance =  std::pow(10,power) * scale;
         for(double i = minMajorTick; i<range.max;i+=majorTickDistance ){
-            Pix p = cotrans(Coord2d(i,0.0));
+            Pix p = cotrans({i,0.0});
             Pix p1 = box_coord(Pix(p.x,box_coord.inner.h));
             Pix p2 = box_coord(Pix(p.x,box_coord.inner.h-8));
             SDL_RenderDrawLine(gRenderer, p1.x, 
@@ -53,7 +53,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
             std::sprintf(buf,"%.4g",i);
             std::string number(buf);
             Pix window_p = box_coord(Pix(p.x, box_coord.inner.h+1));
-            Pix xSize = cotrans(Coord2d(majorTickDistance,0.0));
+            Pix xSize = cotrans({majorTickDistance,0.0});
             SDL_Rect box = {window_p.x-tickLabelFontSize * 0.5,
                             window_p.y,
                             xSize.x,
@@ -76,7 +76,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
         }
         scale *=2;
         for(double i = minMinorTick; i<range.max;i+=std::pow(10,power) * scale ){
-            Pix p = cotrans(Coord2d(i,0.0));
+            Pix p = cotrans({i,0.0});
             Pix p1 = box_coord(Pix(p.x,box_coord.inner.h));
             Pix p2 = box_coord(Pix(p.x,box_coord.inner.h-4));
             SDL_RenderDrawLine(gRenderer, p1.x, 
@@ -121,7 +121,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
 
         double majorTickDistance =  std::pow(10,power) * scale;
         for(double i = minMajorTick; i<range.max;i+= majorTickDistance){
-            Pix p = cotrans(Coord2d(0.0,i));
+            Pix p = cotrans({0.0,i});
             Pix p1 = box_coord(Pix(0,p.y));
             Pix p2 = box_coord(Pix(8,p.y));
             SDL_RenderDrawLine(gRenderer, p1.x, 
@@ -145,7 +145,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
             minMinorTick += std::pow(10,power);
         }
         for(double i = minMinorTick; i<range.max;i+=std::pow(10,power) * scale ){
-            Pix p = cotrans(Coord2d(0.0,i));
+            Pix p = cotrans({0.0,i});
             Pix p1 = box_coord(Pix(0,p.y));
             Pix p2 = box_coord(Pix(4,p.y));
             SDL_RenderDrawLine(gRenderer, p1.x, 
@@ -228,11 +228,9 @@ void Figure::Render(SDL_Rect rect){
     CoordinateTrans cotrans(canvas,xlim,ylim);
     // std::cout<<"Draw lines"<<std::endl;
     renderer->SetDrawColor(255, 255, 255, 0xFF );
-    // SDL_SetRenderDrawColor(renderer,255, 255, 255, 0xFF );
     SDL_RenderFillRect(renderer->Get(), &rect);
 
     renderer->SetDrawColor(220, 220, 220, 0xFF );
-    // SDL_SetRenderDrawColor(renderer->Get(),220, 220, 220, 0xFF );
     SDL_RenderFillRect(renderer->Get(), &canvas);
     
     for(auto &line: lines){
@@ -248,11 +246,10 @@ void Figure::Render(SDL_Rect rect){
                 r = 255;b = 0;g = 0;
                 break;
         }
-        // renderer->SetDrawColor(r, g, b, 0xFF );
-        SDL_SetRenderDrawColor(renderer->Get(),r, g, b, 0xFF );
+        renderer->SetDrawColor(r, g, b, 0xFF );
         SDL_Point points[line.xData.size()];
         for(uint64_t i = 0; i<line.xData.size();i++){
-            Pix p = box_coord(cotrans(Coord2d(line.xData[i],line.yData[i])));
+            Pix p = box_coord(cotrans({line.xData[i], line.yData[i]}));
             if(p.y>canvas.y+canvas.h){
                 p.y=canvas.y+canvas.h;     
             }
@@ -272,7 +269,6 @@ void Figure::Render(SDL_Rect rect){
     yaxis.Render(renderer->Get(),window_coord,box_coord,cotrans);
     xaxis.Render(renderer->Get(),window_coord,box_coord,cotrans);
     renderer->SetDrawColor(255, 255, 255, 0xFF );    
-    // SDL_SetRenderDrawColor(renderer->Get(),255, 255, 255, 0xFF );
     //draw Outer box border
     SDL_RenderDrawRect(renderer->Get(), &rect);
 
