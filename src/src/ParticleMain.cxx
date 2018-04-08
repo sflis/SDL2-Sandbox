@@ -151,7 +151,7 @@ bool ParticleApp::OnInit() {
 
         texture = SDL_CreateTexture(
                                 renderer->Get(),
-                                    SDL_PIXELFORMAT_ARGB8888,
+                                    SDL_PIXELFORMAT_BGRA8888,
                                     SDL_TEXTUREACCESS_STREAMING,
                                     screen_width, screen_height*0.8
                                     );
@@ -287,14 +287,6 @@ void ParticleApp::OnLoop(){
         // 
         time+=dt;
     }
-    // sim->Step(dt);
-    // time+=dt;
-    // sim->Step(dt);
-    // time+=dt;
-    // sim->Step(dt);
-    // time+=dt;
-    // sim->Step(dt);
-    // time+=dt;
     timeVector.push_back(time);
 }
 //=============================================================================
@@ -326,7 +318,6 @@ void RenderTree(sdl2::Renderer &renderer, QuadTree &tree, CoordinateTrans trans)
 //=============================================================================
 void renderTaggedParticle(int particleID, 
                             const std::vector<Particle> &particles, 
-                            std::vector< unsigned char > &pixels,
                             CoordinateTrans trans,
                             int screen_height,
                             int screen_width,
@@ -346,7 +337,7 @@ void renderTaggedParticle(int particleID,
     char str[300];
     sprintf(str,"Particle ID: %d \nMass: %.3g \nPosition: (%5.3g, %5.3g)\nVelocity: (%5.3g,%5.3g).",
         particleID,p.mass,p.pos[0],p.pos[1],p.vel[0],p.vel[1]);
-    tbox.Render(std::string(str),{0,0,300,100},renderer.Get(),{255,255,255,0xFF},14);
+    tbox.Render(std::string(str),{0,0,300,100},renderer.Get(),{255,255,25,0xFF},14);
 
 }
 
@@ -369,8 +360,9 @@ void ParticleApp::OnRender(){
 
 
     auto &pixels = rpixmap->GetMap();
-    if(!traces)
+    if(!traces){
         std::fill(pixels.begin(), pixels.end(), 0);
+    }
 
     int i = 0;
     double energy = 0;
@@ -401,9 +393,8 @@ void ParticleApp::OnRender(){
                     for(int i = -1;i<2;i++){
                         for(int j = -1;j<2;j++){
                             const unsigned int index = ( screen_width  * (pix.y+i) ) + (pix.x+j) ;
-                            if(index<pixels.size() ){
+                            if(index<histogram.size() ){
                                 histogram[index]+=70.0/(1+abs(i)+abs(j));
-
 
                             }
                         }
@@ -429,33 +420,24 @@ void ParticleApp::OnRender(){
             case 0:
                 for(int i = -1;i<2;i++){
                     for(int j = -1;j<2;j++){
-                        const unsigned int offset = ( screen_width * 4 * (pix.y+i) ) + (pix.x+j) * 4;
-                        if(offset<pixels.size() && abs(i)+abs(j)<2){
-                            if(pixels[ offset + 0 ]<235){
-                                pixels[ offset + 0 ] += 20;
-                                pixels[ offset + 1 ] += 20;
-                                pixels[ offset + 2 ] += 20;
-                                pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;
-                            }                    
+                        if( (pix.x+j) < screen_width || (pix.y+i) < screen_height){
+                            auto & pixel =  rpixmap->operator[]({pix.x+j,pix.y+i});
+                            if((pixel<<16 & 0xFF)<230)
+                                pixel += rgb2hex({20,20,20,0xFF});
                         }
                     }
                 }
 
-                {
-                    const unsigned int offset = ( screen_width * 4 * (pix.y) ) + (pix.x) * 4;
-                        if(offset<pixels.size() ){
-                            if(pixels[ offset + 0 ]<235){
-                                pixels[ offset + 0 ] += 20;
-                                pixels[ offset + 1 ] += 20;
-                                pixels[ offset + 2 ] += 20;
-                                pixels[ offset + 3 ] = SDL_ALPHA_OPAQUE;
-                            }                    
-                        }
+                if( (pix.x) < screen_width || (pix.y) < screen_height){
+                    auto & pixel =  rpixmap->operator[]({pix.x,pix.y});
+                    if((pixel<<16 & 0xFF)<230)
+                        pixel += rgb2hex({20,20,20,0xFF});
+              
                 }
                 break;
             case 1:
                 {
-                    rpixmap->SetPixel(pix.x, pix.y, 
+                    rpixmap->SetPixel(pix, 
                                 {uint8_t(255*((vel-minVel)/velRange)),
                                 vel>minVel+velRange*0.5 ? uint8_t(255*((maxVel-vel)/velRange)) :uint8_t(255*((vel-minVel)/velRange)),
                                 uint8_t(255*((maxVel-vel)/velRange)),
@@ -465,7 +447,7 @@ void ParticleApp::OnRender(){
             case 2:
                 {
                     uint32_t i = int(n*(vel-minVel)/velRange);
-                    rpixmap->SetPixel(pix.x, pix.y, 
+                    rpixmap->SetPixel(pix, 
                                 {colormap[i*3+2],
                                 colormap[i*3+1],
                                 colormap[i*3],
@@ -515,7 +497,6 @@ void ParticleApp::OnRender(){
     SDL_RenderCopy( renderer->Get(), texture, NULL, NULL );
     if(particleTag) 
         renderTaggedParticle(particleID, particles, 
-                            pixels,
                             trans,
                             screen_height,
                             screen_width,
@@ -533,9 +514,7 @@ void ParticleApp::OnRender(){
 
     auto fig = Figure(renderer,tbox);
     fig.Plot(timeVector,kineticEnergy,blue);
-    Range range = {4.8,log10(energy)*1.1};
-    fig.SetYLim(range);
-
+    fig.SetYLim({4.8,log10(energy)*1.1});
     fig.Render(plotViewport);
     
 
@@ -545,8 +524,7 @@ void ParticleApp::OnRender(){
     fps.push_back((1000.0/deltaTime));
     fig2.Plot(timeVector,fps,blue);
     plotViewport.x = screen_width/2;
-    Range ylim = {0, 1.5*fps[fps.size()-1]};
-    fig2.SetYLim(ylim);
+    fig2.SetYLim({0, 1.5*fps[fps.size()-1]});
     fig2.Render(plotViewport);
 
     char str[100];

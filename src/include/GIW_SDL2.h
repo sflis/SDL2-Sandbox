@@ -77,7 +77,7 @@ namespace sdl2{
             renderer_ptr_t renderer;
     };
     using Renderer_ptr_t_shr = std::shared_ptr<Renderer>;
-
+    using RendererPtr = std::shared_ptr<Renderer>;
 }// end sdl
 
 #endif
