@@ -64,7 +64,7 @@ class Figure {
         Line & Plot(std::vector<double> &x, std::vector<double> &y,color c);
 
         void Render(SDL_Rect rect);
-        void SetYLim(Range &r){ylim = r;}
+        void SetYLim(Range r){ylim = r;}
         Axis &GetYaxis(){return yaxis;}
         Axis &GetXaxis(){return xaxis;}
         void SetCanvasBackgroundColor(SDL_Color c){canvasBackgroundColor = c;}

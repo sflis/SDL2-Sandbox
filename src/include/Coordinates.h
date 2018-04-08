@@ -22,14 +22,13 @@ struct Rect{
 };
 
 struct Pix{
-    Pix(int x, int y):x(x),y(y){}
-    Pix():Pix(0,0){}
+    // Pix(int x, int y):x(x),y(y){}
+    // Pix():Pix(0,0){}
     int x;
     int y;
 };
 
-struct Coord2d{
-    // Coord2d(double x,double y):x(x),y(y){}
+struct Point2d{
     double x;
     double y;
 };
@@ -55,10 +54,10 @@ inline Pix BoxCoordinates::operator()(Pix pix){
 class CoordinateTrans{
     public:
         CoordinateTrans(Rect outer, Range x, Range y):outer(outer),x(x),y(y){}
-        Pix operator()(Coord2d pos);
+        Pix operator()(Point2d pos);
         Pix operator()(double x, double y);
-        Pix Coord2d2Pix(Coord2d pos);
-        Coord2d Pix2Coord2d(Pix pix);
+        Pix Coord2d2Pix(Point2d pos);
+        Point2d Pix2Coord2d(Pix pix);
     
     private:
         Rect outer;
@@ -66,7 +65,7 @@ class CoordinateTrans{
         Range y;
 };
 
-inline Pix CoordinateTrans::Coord2d2Pix(Coord2d pos){
+inline Pix CoordinateTrans::Coord2d2Pix(Point2d pos){
     Pix outpix;
     double xrange = x.max-x.min;
     double yrange = y.max-y.min;
@@ -75,7 +74,7 @@ inline Pix CoordinateTrans::Coord2d2Pix(Coord2d pos){
     return outpix;
 }
 
-inline Pix CoordinateTrans::operator()(Coord2d pos){
+inline Pix CoordinateTrans::operator()(Point2d pos){
     return Coord2d2Pix(pos);
 }
 
@@ -90,8 +89,8 @@ inline Pix CoordinateTrans::operator()(double xx, double yy){
     return Coord2d2Pix({xx,yy});//outpix;
 }
 
-inline Coord2d CoordinateTrans::Pix2Coord2d(Pix pix){
-    Coord2d outCoord;
+inline Point2d CoordinateTrans::Pix2Coord2d(Pix pix){
+    Point2d outCoord;
     // double xrange = x.max-x.min;
     // double yrange = y.max-y.min; 
     outCoord.x = pix.x-outer.x;

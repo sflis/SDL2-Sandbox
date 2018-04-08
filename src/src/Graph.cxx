@@ -19,8 +19,8 @@ void Axis::Render(SDL_Renderer* gRenderer,
     
     if(type==xaxis){
         //bottom
-        Pix p1 = box_coord(Pix(0,int(box_coord.inner.h)));
-        Pix p2 = box_coord(Pix(int(box_coord.inner.w),int(box_coord.inner.h)));
+        Pix p1 = box_coord({0,int(box_coord.inner.h)});
+        Pix p2 = box_coord({int(box_coord.inner.w),int(box_coord.inner.h)});
         
         SDL_RenderDrawLine(gRenderer, p1.x, 
                                          p1.y,  
@@ -43,8 +43,8 @@ void Axis::Render(SDL_Renderer* gRenderer,
         double majorTickDistance =  std::pow(10,power) * scale;
         for(double i = minMajorTick; i<range.max;i+=majorTickDistance ){
             Pix p = cotrans({i,0.0});
-            Pix p1 = box_coord(Pix(p.x,box_coord.inner.h));
-            Pix p2 = box_coord(Pix(p.x,box_coord.inner.h-8));
+            Pix p1 = box_coord({p.x,box_coord.inner.h});
+            Pix p2 = box_coord({p.x,box_coord.inner.h-8});
             SDL_RenderDrawLine(gRenderer, p1.x, 
                                              p1.y,  
                                              p2.x, 
@@ -52,7 +52,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
                                              );
             std::sprintf(buf,"%.4g",i);
             std::string number(buf);
-            Pix window_p = box_coord(Pix(p.x, box_coord.inner.h+1));
+            Pix window_p = box_coord({p.x, box_coord.inner.h+1});
             Pix xSize = cotrans({majorTickDistance,0.0});
             SDL_Rect box = {window_p.x-tickLabelFontSize * 0.5,
                             window_p.y,
@@ -77,8 +77,8 @@ void Axis::Render(SDL_Renderer* gRenderer,
         scale *=2;
         for(double i = minMinorTick; i<range.max;i+=std::pow(10,power) * scale ){
             Pix p = cotrans({i,0.0});
-            Pix p1 = box_coord(Pix(p.x,box_coord.inner.h));
-            Pix p2 = box_coord(Pix(p.x,box_coord.inner.h-4));
+            Pix p1 = box_coord({p.x,box_coord.inner.h});
+            Pix p2 = box_coord({p.x,box_coord.inner.h-4});
             SDL_RenderDrawLine(gRenderer, p1.x, 
                                              p1.y,  
                                              p2.x, 
@@ -87,8 +87,8 @@ void Axis::Render(SDL_Renderer* gRenderer,
         }
 
         //top
-        p1 = box_coord(Pix(0,0));
-        p2 = box_coord(Pix(int(box_coord.inner.w),0));
+        p1 = box_coord({0,0});
+        p2 = box_coord({int(box_coord.inner.w),0});
         
         SDL_RenderDrawLine(gRenderer, p1.x, 
                                          p1.y,  
@@ -98,8 +98,8 @@ void Axis::Render(SDL_Renderer* gRenderer,
     }else if(type==yaxis){
         
         //Right y-axis
-        Pix p1 = box_coord(Pix(0,int(box_coord.inner.h)));
-        Pix p2 = box_coord(Pix(0,0));
+        Pix p1 = box_coord({0,int(box_coord.inner.h)});
+        Pix p2 = box_coord({0,0});
         
         SDL_RenderDrawLine(gRenderer, p1.x, 
                                          p1.y,  
@@ -121,9 +121,9 @@ void Axis::Render(SDL_Renderer* gRenderer,
 
         double majorTickDistance =  std::pow(10,power) * scale;
         for(double i = minMajorTick; i<range.max;i+= majorTickDistance){
-            Pix p = cotrans({0.0,i});
-            Pix p1 = box_coord(Pix(0,p.y));
-            Pix p2 = box_coord(Pix(8,p.y));
+            Pix p = cotrans({0.0, i});
+            Pix p1 = box_coord({0, p.y});
+            Pix p2 = box_coord({8, p.y});
             SDL_RenderDrawLine(gRenderer, p1.x, 
                                              p1.y,  
                                              p2.x, 
@@ -131,8 +131,8 @@ void Axis::Render(SDL_Renderer* gRenderer,
                                              );
             std::sprintf(buf,"%.3g",i);
             std::string number(buf);
-            Pix py = box_coord(Pix(0, p.y));
-            Pix window_p = window_coord(Pix(5, 0));
+            Pix py = box_coord({0, p.y});
+            Pix window_p = window_coord({5, 0});
             SDL_Rect box = {window_p.x,py.y-tickLabelFontSize/2,tickLabelFontSize,tickLabelFontSize};
             font->Render(number,box,gRenderer,fontColor,tickLabelFontSize);
         }
@@ -146,8 +146,8 @@ void Axis::Render(SDL_Renderer* gRenderer,
         }
         for(double i = minMinorTick; i<range.max;i+=std::pow(10,power) * scale ){
             Pix p = cotrans({0.0,i});
-            Pix p1 = box_coord(Pix(0,p.y));
-            Pix p2 = box_coord(Pix(4,p.y));
+            Pix p1 = box_coord({0,p.y});
+            Pix p2 = box_coord({4,p.y});
             SDL_RenderDrawLine(gRenderer, p1.x, 
                                              p1.y,  
                                              p2.x, 
@@ -156,8 +156,8 @@ void Axis::Render(SDL_Renderer* gRenderer,
         }
 
         //Left y-axis
-        p1 = box_coord(Pix(int(box_coord.inner.w),int(box_coord.inner.h)));
-        p2 = box_coord(Pix(int(box_coord.inner.w),0));
+        p1 = box_coord({int(box_coord.inner.w),int(box_coord.inner.h)});
+        p2 = box_coord({int(box_coord.inner.w),0});
         
         SDL_RenderDrawLine(gRenderer, p1.x, 
                                          p1.y,  
