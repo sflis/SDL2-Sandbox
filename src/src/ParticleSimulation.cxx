@@ -22,7 +22,7 @@ ParticleSimulation::ParticleSimulation(double x1,
                                         // std::random_device rd; // obtain a random number from hardware
                                          // seed the generator
                                         // eng = std::mt19937(rd());
-                                        nThreads = 2;
+                                        nThreads = 1;
                                         for(int i = 0; i<nThreads; i++){
                                             workers.push_back(new Worker(nThreads,
                                                                             i,  
@@ -38,7 +38,7 @@ ParticleSimulation::ParticleSimulation(double x1,
                                                                         
 double const forceField(const double r){
 
-    return -1.0/(r * r * r+1e-3);//+1.0/(r*r*r*r+1e-5);
+    return -1.0/(r * r * r+1e-1)+1.0/(r*r*r*r+1e-2);
 }
 
 struct Position
@@ -120,6 +120,8 @@ void computeAcc3(std::vector<Particle> *p, int start, int step){
 }
 
 void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
+    // #if(deph)
+    // std::cout<<"Depth: "<<depth<<std::endl;
     if(node.type == QuadTree::Node::EmptyLeaf){
         return;
     }
@@ -144,28 +146,36 @@ void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
         // }
     }
     else{
-        if(node.type == QuadTree::Node::node){
-            for(const auto &n: node.nodes){
-                if(!n){
-                    // std::cout<<depth<<" "<<n<<std::endl;
+        switch(node.type){
+            case QuadTree::Node::node:
+                for(const auto &n: node.nodes)
+                    SumBarnesHut(*n,p,depth+1);
+                // std::cout<<"++++++++++++++ "<<&node.activeNodes<<"  "<<node.particles.size()<<"  "<<depth<<"  "<<node.depth<<std::endl;
+                for(const auto &i: node.activeNodes){
+                    if(i>4){
+                        // std::cout<<i<<"   "<<&i<<"      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
+                        std::cout<<node.type<<"  "<<depth<<" "<<&node.activeNodes<<"  "<<node.particles.size()<<"  "<<node.depth<<std::endl;
+                    }
                 }
-                SumBarnesHut(*n,p,depth+1);
-            }
-        }
-        else{
-            // std::cout<<node.particles.size()<<std::endl;
-            for(const auto & tp: node.particles){
-                // std::cout<<&tp<<std::endl;
-                double dx = p.pos[0] - tp->pos[0];
-                double dy = p.pos[1] - tp->pos[1];
-                double r = sqrt(dx*dx + dy*dy);
-                if(r<1e-2)
-                    continue;
-                double norm = tp->mass;
-                double acc = norm * forceField(r);
-                p.acc[0] += acc * dx;
-                p.acc[1] += acc * dy;
-            }
+                // std::cout<<std::endl;
+                // for(const auto i: node.activeNodes){
+                //     std::cout<<depth+1<<"  "<<i<<"  "<<node.type<<std::endl;
+                //     SumBarnesHut(*node.nodes[i],p,depth+1);
+                // }
+                break;
+            default:
+                for(const auto & tp: node.particles){
+                    // std::cout<<&tp<<std::endl;
+                    double dx = p.pos[0] - tp->pos[0];
+                    double dy = p.pos[1] - tp->pos[1];
+                    double r = sqrt(dx*dx + dy*dy);
+                    if(r<1e-2)
+                        continue;
+                    double norm = tp->mass;
+                    double acc = norm * forceField(r);
+                    p.acc[0] += acc * dx;
+                    p.acc[1] += acc * dy;
+            }    
         }
     }
 }
@@ -174,7 +184,7 @@ void ParticleSimulation::BarnesHutSum(double dt){
 
     QuadTree tree;
     tree.BuildTree(particles);
-    std::map<Particle*,QuadTree::Node*> particleMap;
+    // std::map<Particle*,QuadTree::Node*> particleMap;
      for(int i = 0,n = particles.size();i<n;i++){
         particlePool.indexQueue.push(i);
     }
@@ -206,7 +216,7 @@ void ParticleSimulation::BarnesHutSum(double dt){
 
     for(auto &p: particles){
         // std::cout<<p.acc[0]<<"  "<<p.acc[1]<<std::endl;
-        p.acc[1] -=0;
+        // p.acc[1] -=0;
         p.pos[0] += p.vel[0] * dt + 0.5 * p.acc[0] * dt * dt;
         p.pos[1] += p.vel[1] * dt + 0.5 * p.acc[1] * dt * dt;
         p.vel[0] += 0.5 * (p.oldacc[0]+p.acc[0]) * dt;
@@ -421,8 +431,9 @@ void Worker::Run2(){
                 // particlePool.indexQueue.pop();
                 ql.unlock();
                 for(int j =0; j<i; j++){
-                    // std::cout<<"Thread "<<threadIndex<<" processing "<<j<<std::endl;
-                    computeAccBarnesHut( * tree, particles[indexQueue.front()]);
+                    // std::cout<<"Thread "<<threadIndex<<" processing "<<j<<"   "<<indexQueue.front()<<std::endl;
+
+                    computeAccBarnesHut( *tree, particles[indexQueue.front()]);
                     indexQueue.pop();
                 }
                 ql.lock();

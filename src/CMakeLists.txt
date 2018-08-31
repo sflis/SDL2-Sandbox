@@ -51,7 +51,7 @@ add_executable(CellSim2 src/CellMain.cxx src/CellSimulation2.cxx src/Graph.cxx s
 
 add_executable(Graph src/GraphMain.cxx src/FontCache.cxx src/Graph.cxx)
 
-#add_executable(Graph2 src/GraphMain2.cxx src/FontCache.cxx src/Graph.cxx)
+add_executable(Graph2 src/GraphMain2.cxx src/FontCache.cxx src/Graph.cxx)
 
 add_executable(Particles src/ParticleMain.cxx 
                         src/ParticleSimulation.cxx 

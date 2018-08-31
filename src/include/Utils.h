@@ -91,7 +91,7 @@ class RawPixelMap{
         pixelmap(uint32_t(width * height * 4)),
         size(pixelmap.size())
         {}
-        void SetPixel(uint32_t x, uint32_t y, SDL_Color color){
+        void SetPixel(int x, int y, SDL_Color color){
             
             return SetPixel({x,y},color);
         }
@@ -115,8 +115,8 @@ class RawPixelMap{
 
     private:
 
-        uint32_t width;
-        uint32_t height;
+        int width;
+        int height;
         sdl2::texture_ptr_t_shr texture;
         std::vector<uint32_t> pixelmap;
         uint32_t size;
@@ -128,8 +128,8 @@ using RawPixelMap_ptr_t_shr = std::shared_ptr<RawPixelMap>;
 class View{
     public:
         View(sdl2::RendererPtr renderer, 
-            uint32_t width, 
-            uint32_t height,
+            int width, 
+            int height,
             Pix anchor,            
             Range x,
             Range y
@@ -144,11 +144,11 @@ class View{
         // pixelmap(uint32_t(width * height * 4)),
         pixelmap(uint32_t(width * height)),
         size(pixelmap.size()),
-        trans(Rect({anchor.x,anchor.y,width,height}),x,y),
+        trans({anchor.x,anchor.y,width,height},x,y),
         anchor(anchor)
         {}
 
-        void SetPixel(uint32_t x, uint32_t y, SDL_Color color){
+        void SetPixel(int x, int y, SDL_Color color){
             
             return SetPixel({x,y},color);
         }
@@ -168,8 +168,8 @@ class View{
 
     private:
 
-        uint32_t width;
-        uint32_t height;
+        int width;
+        int height;
         sdl2::texture_ptr_t_shr texture;
         std::vector<unsigned char> pixelmap;
         std::vector<uint32_t> pixelmap2;

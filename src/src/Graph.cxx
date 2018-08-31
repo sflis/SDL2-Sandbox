@@ -54,7 +54,7 @@ void Axis::Render(SDL_Renderer* gRenderer,
             std::string number(buf);
             Pix window_p = box_coord({p.x, box_coord.inner.h+1});
             Pix xSize = cotrans({majorTickDistance,0.0});
-            SDL_Rect box = {window_p.x-tickLabelFontSize * 0.5,
+            SDL_Rect box = {int(window_p.x-tickLabelFontSize * 0.5),
                             window_p.y,
                             xSize.x,
                             tickLabelFontSize};
@@ -176,8 +176,8 @@ Figure::~Figure(){
 }
 
 //=============================================================================
-Figure::Figure(sdl2::Renderer_ptr_t_shr renderer, FontCache *font):width(width),
-                                              height(height),
+Figure::Figure(sdl2::Renderer_ptr_t_shr renderer, FontCache *font):width(0),
+                                              height(0),
                                               xlim({0.0,0.0}),
                                               ylim({0.0,0.0}),
                                               font(font),
@@ -198,6 +198,7 @@ Line & Figure::Plot(std::vector<double> &x, std::vector<double> &y,color c){
     Line newLine{x,y,c,1.0};
     lines.push_back(newLine);
     Update();
+    return lines.back();
     
 }
 //=============================================================================
@@ -213,8 +214,8 @@ void Figure::Render(SDL_Rect rect){
     yaxis.GetRange().max = ylim.max;
     xaxis.GetRange().min = xlim.min;
     xaxis.GetRange().max = xlim.max;
-    double dx = width/(xlim.max-xlim.min);
-    double dy = height/(ylim.max-ylim.min); 
+    // double dx = width/(xlim.max-xlim.min);
+    // double dy = height/(ylim.max-ylim.min); 
     
 
     BoxCoordinates window_coord(rect,rect); //FIXME: Add window box
@@ -234,6 +235,7 @@ void Figure::Render(SDL_Rect rect){
     SDL_RenderFillRect(renderer->Get(), &canvas);
     
     for(auto &line: lines){
+        // int r=0,b=0,g= 0;
         int r,b,g;
         switch(line.c){
             case blue:
@@ -245,6 +247,8 @@ void Figure::Render(SDL_Rect rect){
             case red:
                 r = 255;b = 0;g = 0;
                 break;
+            default:
+              r = 255;b = 255;g = 255;
         }
         renderer->SetDrawColor(r, g, b, 0xFF );
         SDL_Point points[line.xData.size()];

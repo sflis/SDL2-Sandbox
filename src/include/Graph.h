@@ -72,10 +72,10 @@ class Figure {
         void Update();
     protected:
         std::vector<Line> lines;
-        Range xlim;
-        Range ylim;
         int width;
         int height;
+        Range xlim;
+        Range ylim;
         FontCache *font;
         bool font_shared;
         double paddingTop;

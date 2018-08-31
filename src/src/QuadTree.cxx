@@ -34,6 +34,7 @@ void QuadTree::BuildTree(std::vector<Particle> &particles){
         root.AddParticle(&p, *this);
     }
 
+    root.UpdateActiveNodes();
 }
 
 bool QuadTree::CondParticleAdd(Particle *par, double dist){
@@ -105,65 +106,68 @@ void QuadTree::Node::AddParticle(Particle *par,QuadTree &tree){
     totalMass += par->mass;
     centerOfMass.x += par->mass * par->pos[0];
     centerOfMass.y += par->mass * par->pos[1];
-    if(type==Node::EmptyLeaf){
-        particles.push_back(par);
-        // particle = par;
-        type = ParticleLeaf;
-        return;
-    }
-    else if(type==Node::node){
+    //determining the index of quadrant in which the particle lands
+    uint16_t quadrandIndex = 0;
+    quadrandIndex = uint16_t(par->pos[0]>=p.x);
+    quadrandIndex = quadrandIndex | uint16_t(par->pos[1]>=p.y)<<1;    
+    switch(type){
 
-        if(par->pos[0]>=p.x){
-            if(par->pos[1]>=p.y)
-                nodes[0]->AddParticle(par,tree);
-            else
-                nodes[1]->AddParticle(par,tree);
-        }
-        else{
-            if(par->pos[1]<p.y)
-                nodes[2]->AddParticle(par,tree);
-            else
-                nodes[3]->AddParticle(par,tree);       
-        }       
-    }
-    else{
-        if(depth>tree.maxDepth or size<tree.minSize){
-            particles.push_back(par);   
+        case Node::EmptyLeaf:
+            particles.push_back(par);
+            // particle = par;
+            type = ParticleLeaf;
+            return;
+        case Node::node:
+
+            nodes[quadrandIndex]->AddParticle(par,tree);
+            // activeNodes.insert(quadrandIndex);
+            return;
+        case Node::ParticleLeaf:{
+            if(depth>tree.maxDepth or size<tree.minSize){
+                particles.push_back(par);   
+                return;
+            }
+            particles.clear();
+            double halfsize = size * 0.5;
+            auto newdepth = depth+1;
+            nodes.push_back(std::make_shared<Node>( Point{p.x-halfsize, p.y-halfsize}, halfsize, EmptyLeaf, newdepth));
+            nodes.push_back(std::make_shared<Node>( Point{p.x+halfsize, p.y-halfsize}, halfsize, EmptyLeaf, newdepth));
+            nodes.push_back(std::make_shared<Node>( Point{p.x-halfsize, p.y+halfsize}, halfsize, EmptyLeaf, newdepth));
+            nodes.push_back(std::make_shared<Node>( Point{p.x+halfsize, p.y+halfsize}, halfsize, EmptyLeaf, newdepth));
+
+
+            type = node;
+            uint16_t quadrandIndexp = 0;
+            quadrandIndexp = uint16_t(particles[0]->pos[0]>=p.x);
+            quadrandIndexp = quadrandIndexp | uint16_t(particles[0]->pos[1]>=p.y)<<1;    
+            nodes[quadrandIndexp]->AddParticle(particles[0],tree);
+            nodes[quadrandIndex]->AddParticle(par,tree);
+            // activeNodes.insert(quadrandIndex);
+            // activeNodes.insert(quadrandIndexp);
             return;
         }
-        nodes.push_back(std::shared_ptr<Node>(new Node({p.x+size * 0.5,p.y+size * 0.5},size * 0.5, EmptyLeaf,depth+1)));
-        nodes.push_back(std::shared_ptr<Node>(new Node({p.x+size * 0.5,p.y-size * 0.5},size * 0.5, EmptyLeaf,depth+1)));
-        nodes.push_back(std::shared_ptr<Node>(new Node({p.x-size * 0.5,p.y-size * 0.5},size * 0.5, EmptyLeaf,depth+1)));
-        nodes.push_back(std::shared_ptr<Node>(new Node({p.x-size * 0.5,p.y+size * 0.5},size * 0.5, EmptyLeaf,depth+1)));
-        type = node;
-        
-        if(particles[0]->pos[0]>=p.x){
-            if(particles[0]->pos[1]>=p.y)
-                nodes[0]->AddParticle(particles[0],tree);
-            else
-                nodes[1]->AddParticle(particles[0],tree);
-        }
-        else{
-            if(particles[0]->pos[1]<p.y)
-                nodes[2]->AddParticle(particles[0],tree);
-            else
-                nodes[3]->AddParticle(particles[0],tree);       
-        }
-
-
-        if(par->pos[0]>=p.x){
-            if(par->pos[1]>=p.y)
-                nodes[0]->AddParticle(par,tree);
-            else
-                nodes[1]->AddParticle(par,tree);
-        }
-        else{
-            if(par->pos[1]<p.y)
-                nodes[2]->AddParticle(par,tree);
-            else
-                nodes[3]->AddParticle(par,tree);       
-        }
+        default:
+            std::cout<<"ERROR"<<std::endl;
+    
     }
+}
+
+void QuadTree::Node::UpdateActiveNodes(){
+    activeNodes.clear();
+    for(int i = 0; i<nodes.size(); i++){
+        if(nodes[i]->type == Node::node || nodes[i]->type == Node::ParticleLeaf){
+            activeNodes.push_back(i);
+            nodes[i]->UpdateActiveNodes();
+        }
+        
+    }
+    // std::cout<<"$$$$$$$$$$$$$$$$"<<std::endl;
+    // for(auto & i: activeNodes){
+    //     // if(i>3)
+    //         std::cout<<i<<std::endl;
+    // }
+    // std::cout<<std::endl;
+
 }
 
 Particle QuadTree::Node::GetCenterOfMassParticle() const{
@@ -178,7 +182,8 @@ Particle QuadTree::Node::GetCenterOfMassParticle() const{
 QuadTree::Node::Node(Point point, 
                     double size, 
                     NodeType type, 
-                    int depth):p(point),
+                    int depth):
+                                p(point),
                                 size(size),
                                 type(type),
                                 depth(depth),

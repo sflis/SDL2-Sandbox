@@ -54,8 +54,11 @@ class ParticleApp {
         uint64_t now= 0;
         uint64_t last = 0;
         double deltaTime = 0;
-        Range x;
-        Range y;
+        double x;
+        double y;
+        double zoom;
+        Range xrange;
+        Range yrange;
         CoordinateTrans trans;
         std::vector<double> fps;
         std::vector<double> kineticEnergy;
@@ -70,18 +73,24 @@ class ParticleApp {
         bool particleTag;
         uint32_t particleID;
         RawPixelMap_ptr_t_shr rpixmap;
+        
+
 };
 
 
 
 
-ParticleApp::ParticleApp():running(true),
+ParticleApp::ParticleApp():
+                    running(true),
                     screen_width(1600),
                     screen_height(900),
                     steps(0),
-                    x({-100*double(screen_width)/screen_height,100*double(screen_width)/screen_height}),
-                    y({-100,100}),
-                    trans(Rect({0,0,screen_width,int(screen_height * 0.8)}),x,y),
+                    x(.0),
+                    y(.0),
+                    zoom(100.0),
+                    xrange({-zoom*double(screen_width)/screen_height+x,zoom*double(screen_width)/screen_height+x}),
+                    yrange({y-zoom,y+zoom}),
+                    trans({0,0,screen_width,int(screen_height * 0.8)},xrange,yrange),
                     time(0),
                     animateTree(true),
                     traces(false),
@@ -185,7 +194,7 @@ bool ParticleApp::OnInit() {
         double r =sqrt(radius*radius*d);
         double vel = 0.00015;//veldist(e2);
         particles.push_back({{20+r*cos(theta),10+r*sin(theta),0},
-                                {vel*(1500*r)*cos(theta+M_PI/2),vel*(1500*r)*sin(theta+M_PI/2),0},
+                                {vel*(1500*r)*cos(theta+M_PI/2)-10,vel*(1500*r)*sin(theta+M_PI/2),0},
                                 {0,0,0},
                                 {0,0,0},
                                 10.0,
@@ -194,19 +203,19 @@ bool ParticleApp::OnInit() {
                                 });
     }
 
-    // for(int i=0; i<3500;i++){
-    //     double theta = th(e2);
-    //     double r = dist(e2);//veldist(e2);
-    //     double vel = 0.11;//veldist(e2);
-    //     particles.push_back({{-20+r*cos(theta),-10+r*sin(theta),0},
-    //                             {vel*sqrt(1500*r)*cos(theta+M_PI/2)+30,vel*sqrt(1500*r)*sin(theta+M_PI/2),0},
-    //                             {0,0,0},
-    //                             {0,0,0},
-    //                             10.0,
-    //                             1.0,
-    //                             i
-    //                             });
-    // }
+    for(int i=0; i<3500;i++){
+        double theta = th(e2);
+        double r = 20*dist(e2);//veldist(e2);
+        double vel = 0.11;//veldist(e2);
+        particles.push_back({{-20+r*cos(theta),-10+r*sin(theta),0},
+                                {vel*sqrt(1500*r)*cos(theta+M_PI/2)+10,vel*sqrt(1500*r)*sin(theta+M_PI/2),0},
+                                {0,0,0},
+                                {0,0,0},
+                                10.0,
+                                1.0,
+                                i
+                                });
+    }
     
 
 
@@ -218,7 +227,7 @@ bool ParticleApp::OnInit() {
                                 200,
                                 10000
                                 });
-    sim = new ParticleSimulation(x.min,x.max,y.min,y.max,particles);    
+    sim = new ParticleSimulation(xrange.min,xrange.max,yrange.min,yrange.max,particles);    
     SDL_Color c = {0,0,0,0xFF};
     tbox = new FontCache(renderer->Get(),c);
     return true;
@@ -270,6 +279,18 @@ void ParticleApp::OnEvent(SDL_Event* event){
                     visualizationState++;
                     if(visualizationState>nVisualizationStates)
                         visualizationState = 0;
+                    break;
+                case SDLK_k:
+                    zoom +=0.1;
+                    xrange = {-zoom*double(screen_width)/screen_height+x,zoom*double(screen_width)/screen_height+x};
+                    yrange = {y-zoom,y+zoom};
+                    trans =  CoordinateTrans({0,0,screen_width,int(screen_height * 0.8)},xrange,yrange);
+                    break;
+                case SDLK_m:
+                    zoom -=0.1;
+                    xrange = {-zoom*double(screen_width)/screen_height+x,zoom*double(screen_width)/screen_height+x};
+                    yrange = {y-zoom,y+zoom};
+                    trans =  CoordinateTrans({0,0,screen_width,int(screen_height * 0.8)},xrange,yrange);
                     break;
             }
         }
@@ -380,22 +401,22 @@ void ParticleApp::OnRender(){
     int n = 1028;
     unsigned char colormap[n*3];
     ColorMap::PLSequentialBlackBody(n, &colormap[0]);
-    std::vector<double> histogram(pixels.size()/4,0);
+    std::vector<double> histogram(pixels.size(),0);
     
     switch(visualizationState){
+        case 0:
         case 3:
             {
                
                 for(auto &p:particles){
                     auto pix = trans(p.pos[0],p.pos[1]);
-                    if(pix.x >=screen_width || pix.y>=screen_height || pix.x<0 || pix.y<0)
+                    if(pix.x >=screen_width || pix.y>=screen_height )
                         continue;
                     for(int i = -1;i<2;i++){
                         for(int j = -1;j<2;j++){
                             const unsigned int index = ( screen_width  * (pix.y+i) ) + (pix.x+j) ;
                             if(index<histogram.size() ){
                                 histogram[index]+=70.0/(1+abs(i)+abs(j));
-
                             }
                         }
                     }                            
@@ -419,20 +440,21 @@ void ParticleApp::OnRender(){
         switch(visualizationState){
             case 0:
                 for(int i = -1;i<2;i++){
-                    for(int j = -1;j<2;j++){
-                        if( (pix.x+j) < screen_width || (pix.y+i) < screen_height){
-                            auto & pixel =  rpixmap->operator[]({pix.x+j,pix.y+i});
-                            if((pixel<<16 & 0xFF)<230)
-                                pixel += rgb2hex({20,20,20,0xFF});
+                    for(int j = -1;j<2;j++){    
+                        if(pix.y+i<0 || pix.x+j<0)
+                            continue;
+                        const  uint64_t index = ( screen_width  * (pix.y+i) ) + (pix.x+j) ;
+                        if(index<histogram.size()){                            
+                            int k = histogram[index];
+                            if(k>=n)
+                                k = n-1;
+                            rpixmap->SetPixel(pix.x+j, pix.y+i, 
+                                {float(k)/n*255,
+                                 float(k)/n*255,
+                                 float(k)/n*255,
+                                SDL_ALPHA_OPAQUE});
                         }
                     }
-                }
-
-                if( (pix.x) < screen_width || (pix.y) < screen_height){
-                    auto & pixel =  rpixmap->operator[]({pix.x,pix.y});
-                    if((pixel<<16 & 0xFF)<230)
-                        pixel += rgb2hex({20,20,20,0xFF});
-              
                 }
                 break;
             case 1:
@@ -464,6 +486,8 @@ void ParticleApp::OnRender(){
                         const  uint64_t index = ( screen_width  * (pix.y+i) ) + (pix.x+j) ;
                         if(index<histogram.size()){                            
                             int k = histogram[index];
+                            if(k>=n)
+                                k = n-1;
                             rpixmap->SetPixel(pix.x+j, pix.y+i, 
                                 {colormap[k*3+2],
                                 colormap[k*3+1],
@@ -530,7 +554,7 @@ void ParticleApp::OnRender(){
     char str[100];
     sprintf(str,"%.2g fps",1000.0/deltaTime);
     SDL_Rect box ={0,0,800,400};
-    SDL_Color fontColor = {0,0,0};
+    SDL_Color fontColor = {0,0,0,0};
     tbox->Render(std::string(str),box,renderer->Get(),fontColor,40);
     //Update screen
     renderer->Present() ;
