@@ -36,15 +36,6 @@ double const forceField(const double r){
     return -1.0/(r * r * r+1e-1)+1.0/(r*r*r*r+1e-2);
 }
 
-struct Position
-{
-    double x;
-    double y;
-    double xacc;
-    double yacc;
-    double mass;
-};
-
 
 void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
     // #if(deph)
