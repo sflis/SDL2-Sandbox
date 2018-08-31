@@ -79,8 +79,6 @@ class ParticleSimulation{
         ParticleSimulation(double x1, double x2, double y1, double y2, std::vector<Particle> &p);
 
         void Step(double dt);
-        void Step1(double dt);
-        void Step2(double dt);
         void BarnesHutSum(double dt);
         const std::vector<Particle> &GetParticles()const{return particles;}     
 

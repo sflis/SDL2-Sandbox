@@ -17,11 +17,7 @@ ParticleSimulation::ParticleSimulation(double x1,
                                     x2(x2), 
                                     y1(y1),
                                     y2(y2)
-                                    // eng(rd) 
                                     {   
-                                        // std::random_device rd; // obtain a random number from hardware
-                                         // seed the generator
-                                        // eng = std::mt19937(rd());
                                         nThreads = 1;
                                         for(int i = 0; i<nThreads; i++){
                                             workers.push_back(new Worker(nThreads,
@@ -32,7 +28,6 @@ ParticleSimulation::ParticleSimulation(double x1,
                                                                             ready,
                                                                             particlePool));
                                             workers[i]->Start();
-                                            // workers[i]->holdMutex.lock();
                                         }
                                     }
                                                                         
@@ -50,74 +45,6 @@ struct Position
     double mass;
 };
 
-void computeAcc1(std::vector<Particle> *p, int start, int step){
-
-    auto &particles = *p;
-    const int n = particles.size()/double(step) * (1+start)+0.5;
-    int i=0;
-    // std::cout<<"HERE "<<n<<"  "<<step<<"  "<<particles.size()<<"  "<<start<<std::endl;
-    for(int count=0, i = particles.size()/step * start; i<n; i++,count++){
-        auto const p1c = particles[i];
-        double localAcc[2] = {0,0};
-        for(int j = 0, n = particles.size();j<n;j++){
-            // if(i==j){
-                // continue;
-            // }
-            
-            const auto &p2 =particles[j];
-
-            double dx = p1c.pos[0]-p2.pos[0];
-            double dy = p1c.pos[1]-p2.pos[1];//p2.pos[1];
-            double r = sqrt(dx * dx + dy * dy);
-            if(r<1e-4)
-                continue;
-
-            double norm = p2.mass;
-            double acc1 = norm*forceField(r);            
-            localAcc[0] += acc1*dx;
-            localAcc[1] += acc1*dy;
-
-        }
-        // std::cout<<localAcc[0]<<std::endl;
-        auto &p1 = particles[i];
-        p1.oldacc[0] = p1c.acc[0];
-        p1.oldacc[1] = p1c.acc[1];
-        p1.acc[0]=localAcc[0];
-        p1.acc[1]=localAcc[1]; 
-
-    }
-
-}
-
-void computeAcc3(std::vector<Particle> *p, int start, int step){
-
-    auto &particles = *p;
-    const int n = particles.size();// /double(step)*(1+start)+0.5;
-
-    auto const p1c = particles[start];
-    double localAcc[2] = {0,0};
-    for(int j = 0;j<n;j++){
-        if(start==j)
-        
-            continue;
-        const auto &p2 =particles[j];
-
-        double dx = p1c.pos[0]-p2.pos[0];
-        double dy = p1c.pos[1]-p2.pos[1];//p2.pos[1];
-        double r = sqrt( dx * dx + dy * dy);
-        double norm = p2.mass;
-        double acc1 = norm * forceField(r);            
-        localAcc[0] += acc1 * dx;
-        localAcc[1] += acc1 * dy;
-
-    }
-    auto &p1 = particles[start];
-    p1.oldacc[0] = p1c.acc[0];
-    p1.oldacc[1] = p1c.acc[1];
-    p1.acc[0]=localAcc[0];
-    p1.acc[1]=localAcc[1]; 
-
-}
 
 void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
     // #if(deph)
@@ -154,7 +81,7 @@ void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
                 for(const auto &i: node.activeNodes){
                     if(i>4){
                         // std::cout<<i<<"   "<<&i<<"      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
-                        std::cout<<node.type<<"  "<<depth<<" "<<&node.activeNodes<<"  "<<node.particles.size()<<"  "<<node.depth<<std::endl;
+                        std::cout<<node.type<<" "<<&node.activeNodes<<"  "<<node.particles.size()<<"  "<<node.depth<<std::endl;
                     }
                 }
                 // std::cout<<std::endl;
@@ -206,29 +133,13 @@ void ParticleSimulation::BarnesHutSum(double dt){
         w->finished=false;
     }
 
-    // for(auto &particle : particles){
-    //     particle.oldacc[0] = particle.acc[0];
-    //     particle.oldacc[1] = particle.acc[1];
-    //     particle.acc[0] = 0;
-    //     particle.acc[1] = 0;
-    //     SumBarnesHut(tree.GetRoot(), particle);
-    // }     
 
     for(auto &p: particles){
-        // std::cout<<p.acc[0]<<"  "<<p.acc[1]<<std::endl;
-        // p.acc[1] -=0;
         p.pos[0] += p.vel[0] * dt + 0.5 * p.acc[0] * dt * dt;
         p.pos[1] += p.vel[1] * dt + 0.5 * p.acc[1] * dt * dt;
         p.vel[0] += 0.5 * (p.oldacc[0]+p.acc[0]) * dt;
         p.vel[1] += 0.5 * (p.oldacc[1]+p.acc[1]) * dt;
         
-        // if(p.pos[0]<x1  || p.pos[0]>x2){
-        //     p.vel[0] *=-1;
-
-        // }
-        // if(p.pos[1]<y1  || p.pos[1]>y2){
-        //     p.vel[1] *=-1;   
-        // }
     }
 }
 
@@ -243,15 +154,46 @@ void computeAccBarnesHut(QuadTree &tree, Particle &particle){
 }
 
 
+
+void computeAcc3(std::vector<Particle> *p, int start, int step){
+
+    auto &particles = *p;
+    const int n = particles.size();// /double(step)*(1+start)+0.5;
+
+    auto const p1c = particles[start];
+    double localAcc[2] = {0,0};
+    for(int j = 0;j<n;j++){
+        if(start==j)
+        
+            continue;
+        const auto &p2 =particles[j];
+
+        double dx = p1c.pos[0]-p2.pos[0];
+        double dy = p1c.pos[1]-p2.pos[1];//p2.pos[1];
+        double r = sqrt( dx * dx + dy * dy);
+        double norm = p2.mass;
+        double acc1 = norm * forceField(r);            
+        localAcc[0] += acc1 * dx;
+        localAcc[1] += acc1 * dy;
+
+    }
+    auto &p1 = particles[start];
+    p1.oldacc[0] = p1c.acc[0];
+    p1.oldacc[1] = p1c.acc[1];
+    p1.acc[0]=localAcc[0];
+    p1.acc[1]=localAcc[1]; 
+
+}
+
 void ParticleSimulation::Step(double dt){
     std::vector<std::thread> threads;
     int nthreads = 4;
     for(int i = 0; i<nthreads-1;i++){
-        threads.push_back(std::thread(computeAcc1,&particles,i,nthreads));
+        threads.push_back(std::thread(computeAcc3,&particles,i,nthreads));
         // std::cout<<"Thread "<<i<<" started"<<std::endl;
     }
     // std::cout<<"Thread "<<nthreads-1<<" started"<<std::endl;    
-    computeAcc1(&particles, nthreads-1, nthreads);
+    computeAcc3(&particles, nthreads-1, nthreads);
 
     for(auto &t:threads)
         t.join();
@@ -274,69 +216,7 @@ void ParticleSimulation::Step(double dt){
     }
 }
 
-void ParticleSimulation::Step1(double dt){
 
-    for(int i = 0,n = particles.size();i<n;i++){
-        particlePool.indexQueue.push(i);
-    }
-
-
-    {
-        std::unique_lock<std::mutex> l(lock);
-        for(auto &w: workers)
-            w->ready = true;
-    }
-
-    cv.notify_all();
-
-    for(auto &w: workers){
-        std::unique_lock<std::mutex> l(w->llock);
-        w->cv.wait(l, [w]{return w->finished;});
-        w->finished=false;
-    }
-
-    for(auto &p: particles){
-        // std::cout<<p.acc[0]<<"  "<<p.acc[1]<<std::endl;
-        p.acc[1] -=0;
-        p.pos[0] += p.vel[0] * dt + 0.5 * p.acc[0] * dt * dt;
-        p.pos[1] += p.vel[1] * dt + 0.5 * p.acc[1] * dt * dt;
-        p.vel[0] += 0.5 * (p.oldacc[0]+p.acc[0]) * dt;
-        p.vel[1] += 0.5 * (p.oldacc[1]+p.acc[1]) * dt;
-        
-        if(p.pos[0]<x1  || p.pos[0]>x2){
-            p.vel[0] *=-1;
-
-        }
-        if(p.pos[1]<y1  || p.pos[1]>y2){
-            p.vel[1] *=-1;   
-        }
-    }
-}
-
-
-
-void ParticleSimulation::Step2(double dt){
-    QuadTree tree;
-    tree.BuildTree(particles);
-      
-
-    for(auto &p: particles){
-        // std::cout<<p.acc[0]<<"  "<<p.acc[1]<<std::endl;
-        p.acc[1] -=0;
-        p.pos[0] += p.vel[0] * dt + 0.5 * p.acc[0] * dt * dt;
-        p.pos[1] += p.vel[1] * dt + 0.5 * p.acc[1] * dt * dt;
-        p.vel[0] += 0.5 * (p.oldacc[0]+p.acc[0]) * dt;
-        p.vel[1] += 0.5 * (p.oldacc[1]+p.acc[1]) * dt;
-        
-        if(p.pos[0]<x1  || p.pos[0]>x2){
-            p.vel[0] *=-1;
-
-        }
-        if(p.pos[1]<y1  || p.pos[1]>y2){
-            p.vel[1] *=-1;   
-        }
-    }
-}
 
 
 void threadWrapper(Worker *w){
@@ -433,7 +313,7 @@ void Worker::Run2(){
                 for(int j =0; j<i; j++){
                     // std::cout<<"Thread "<<threadIndex<<" processing "<<j<<"   "<<indexQueue.front()<<std::endl;
 
-                    computeAccBarnesHut( *tree, particles[indexQueue.front()]);
+                       computeAccBarnesHut( *tree, particles[indexQueue.front()]);
                     indexQueue.pop();
                 }
                 ql.lock();
