@@ -1,5 +1,6 @@
-
 #include "Graph.h"
+#include "FontCache.h"
+
 #include <math.h>
 #include <algorithm>
 #include <iostream>
@@ -277,6 +278,7 @@ void Figure::Render(SDL_Rect rect){
     SDL_RenderDrawRect(renderer->Get(), &rect);
 
 }
+
 //=============================================================================
 void Figure::Update(){
   for(auto &l: lines){

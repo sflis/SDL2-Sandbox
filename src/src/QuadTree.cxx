@@ -120,16 +120,17 @@ void QuadTree::Node::AddParticle(Particle *par, QuadTree &tree){
                 particles.push_back(par);   
                 return;
             }
-            
+            //Add nodes beneath the current leaf and change the type to node
             double halfsize = size * 0.5;
             auto newdepth = depth+1;
             nodes.push_back(std::make_shared<Node>( Point{p.x-halfsize, p.y-halfsize}, halfsize, EmptyLeaf, newdepth));
             nodes.push_back(std::make_shared<Node>( Point{p.x+halfsize, p.y-halfsize}, halfsize, EmptyLeaf, newdepth));
             nodes.push_back(std::make_shared<Node>( Point{p.x-halfsize, p.y+halfsize}, halfsize, EmptyLeaf, newdepth));
             nodes.push_back(std::make_shared<Node>( Point{p.x+halfsize, p.y+halfsize}, halfsize, EmptyLeaf, newdepth));
-
-
             type = node;
+            
+            //determining the index of the quadrant in which the old particle lands
+            //the four quadrants are nicely encoded in two bits:
             uint16_t quadrandIndexp = 0;
             quadrandIndexp = uint16_t(particles[0]->pos[0]>=p.x);
             quadrandIndexp = quadrandIndexp | uint16_t(particles[0]->pos[1]>=p.y)<<1;    
@@ -137,7 +138,7 @@ void QuadTree::Node::AddParticle(Particle *par, QuadTree &tree){
             particles.clear();
         }
         case Node::node:{   
-            //determining the index of quadrant in which the particle lands
+            //determining the index of the quadrant in which the new particle lands
             uint16_t quadrandIndex = 0;
             quadrandIndex = uint16_t(par->pos[0]>=p.x);
             quadrandIndex = quadrandIndex | uint16_t(par->pos[1]>=p.y)<<1;

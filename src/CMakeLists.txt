@@ -66,7 +66,7 @@ target_link_libraries(CellSim SDL2)
 target_link_libraries(CellSim2 SDL2 SDL2_ttf)
 
 target_link_libraries(Graph SDL2 SDL2_ttf)
-#target_link_libraries(Graph2 SDL2 SDL2_ttf)
+target_link_libraries(Graph2 SDL2 SDL2_ttf)
 target_link_libraries(Particles SDL2 SDL2_ttf )
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread -pthread -std=c++14")
 add_definitions( -O3 -g -Wall -Wextra)

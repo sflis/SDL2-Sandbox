@@ -81,7 +81,6 @@ class GraphApp {
 
 
 
-
 GraphApp::GraphApp() : running(true),
                     screen_width(1700),
                     screen_height(800),
@@ -195,7 +194,7 @@ void GraphApp::OnRender(){
     renderer->Clear();
     SDL_Color fontColor = {255,255,255};
     tbox->Render(std::string(str),box,renderer->Get(),fontColor,30);
-    auto fig = Figure(screen_width,screen_height*0.2,tbox);
+    auto fig = Figure(renderer,tbox);
     // std::cout<<"Created Figure"<<std::endl;
     t += 0.01;
     sprintf(str,"t =- %.3g",t);
@@ -217,7 +216,7 @@ void GraphApp::OnRender(){
     Range ylim = {-8.0,8.0};
     // fig.SetYLim(ylim);
     SDL_Rect r ={200,100,800,400};
-    fig.Render(renderer->Get(),r);
+    fig.Render(r);
     renderer->Present();
     SDL_Delay(30);
 }
