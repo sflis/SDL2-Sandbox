@@ -16,7 +16,7 @@ struct Point{
 
 class QuadTree{
     public:
-        QuadTree(int maxDepth = 1150, double minSize=1e-16);
+        QuadTree(int maxDepth = 150, double minSize=1e-6);
         void BuildTree(std::vector<Particle> &particles);
         bool CondParticleAdd(Particle *par, double dist);    
         enum Quadrant{first=3,second=2,third=1,fourth=0};
@@ -24,17 +24,19 @@ class QuadTree{
             public:
                 enum NodeType{uninitialized,EmptyLeaf,node, ParticleLeaf};
                 Node(Point p, double size, NodeType type, int depth); 
-                Point p;
-                double size;
                 void AddParticle(Particle *par,QuadTree &tree);
                 Node& DryAdd(Particle *par,QuadTree &tree);
-                void UpdateActiveNodes();
+                int UpdateActiveNodes(int count);
+                Particle GetCenterOfMassParticle() const;
+
+                Point p;
+                double size;
                 std::vector<std::shared_ptr<Node> > nodes;// std::array<std::shared_ptr<Node>,4> nodes;
                 std::vector<int> activeNodes;
                 std::vector<Particle*> particles;
                 NodeType type;
                 int depth;
-                Particle GetCenterOfMassParticle() const;
+                
             private:
                 double totalMass;
                 Point centerOfMass;               

@@ -96,7 +96,7 @@ ParticleApp::ParticleApp():
                     traces(false),
                     barnesHut(true),
                     visualizationState(0),
-                    nVisualizationStates(4),
+                    nVisualizationStates(5),
                     particleTag(false),
                     particleID(0)
                     {};
@@ -173,7 +173,7 @@ bool ParticleApp::OnInit() {
     std::uniform_real_distribution<> dist(0,1);
     std::uniform_real_distribution<> veldist(3.7,3.7);
     std::uniform_real_distribution<> th(0.0,2*M_PI);
-    double radius = 30;
+    double radius = 20;
     // for(int i=0; i<16500;i++){
     //     double theta = th(e2);
     //     double d = dist(e2);//veldist(e2);
@@ -188,45 +188,70 @@ bool ParticleApp::OnInit() {
     //                             i
     //                             });
     // }
-    for(int i=0; i<3650;i++){
+    for(int i=0; i<8411;i++){
         double theta = uniform(0,2*M_PI);//th(e2);
         double d = uniform(0,1);//dist(e2);//veldist(e2);
         double r =sqrt(radius*radius*d);
-        double vel = 0.00015;//veldist(e2);
-        particles.push_back({{20+r*cos(theta),10+r*sin(theta),0},
+        double vel = 0*0.00015;//veldist(e2);
+        particles.push_back({{0+r*cos(theta),0+r*sin(theta),0},
                                 {vel*(1500*r)*cos(theta+M_PI/2)-10,vel*(1500*r)*sin(theta+M_PI/2),0},
                                 {0,0,0},
                                 {0,0,0},
                                 10.0,
-                                1.0,
+                                100.0,
                                 i
                                 });
     }
 
-    for(int i=0; i<3500;i++){
+    for(int i=0; i<435;i++){
         double theta = th(e2);
         double r = 20*dist(e2);//veldist(e2);
         double vel = 0.11;//veldist(e2);
-        particles.push_back({{-20+r*cos(theta),-10+r*sin(theta),0},
+        particles.push_back({{-50+r*cos(theta),-20+r*sin(theta),0},
                                 {vel*sqrt(1500*r)*cos(theta+M_PI/2)+10,vel*sqrt(1500*r)*sin(theta+M_PI/2),0},
                                 {0,0,0},
                                 {0,0,0},
                                 10.0,
-                                1.0,
+                                1000.0,
                                 i
                                 });
     }
-    
+    // particles.push_back({{21,19,0},
+    //                             {0,0,0},
+    //                             {0,0,0},
+    //                             {0,0,0},
+    //                             10.0,
+    //                             200,
+    //                             10000
+    //                             ,0});
 
-
-    particles.push_back({{20,10,0},
-                                {0,0,0},
+    particles.push_back({{20.,13.,0.},
+                                {0.,0,0},
                                 {0,0,0},
                                 {0,0,0},
                                 10.0,
                                 200,
-                                10000
-                                });
+                                1001
+                                ,{0,0,0}});
+
+    particles.push_back({{0.,0.,0.},
+                                {0.,0.,0.},
+                                {0.,0.,0.},
+                                {0.,0.,0.},
+                                10.0,
+                                200.,
+                                1002
+                                ,{0,0,0}});
+
+    particles.push_back({{20,16,0},
+                                {0.,0.,0.},
+                                {0.,0.,0.},
+                                {0.,0.,0.},
+                                10.0,
+                                200.,
+                                10000,
+                                {0,0,0}});
+
     sim = new ParticleSimulation(xrange.min,xrange.max,yrange.min,yrange.max,particles);    
     SDL_Color c = {0,0,0,0xFF};
     tbox = new FontCache(renderer->Get(),c);
@@ -301,6 +326,10 @@ void ParticleApp::OnEvent(SDL_Event* event){
 void ParticleApp::OnLoop(){
     double dt = 0.0005;
     for(int i = 0; i<10;i++){
+        // for(auto & p : sim->particles){
+        //     std::cout<<p.id<<std::endl;
+        //     std::cout<<p.pos[0]<<" "<<p.pos[1]<<std::endl;
+        // }
         if(barnesHut)
             sim->BarnesHutSum(dt);
         else
@@ -308,6 +337,7 @@ void ParticleApp::OnLoop(){
         // 
         time+=dt;
     }
+    // exit(1);
     timeVector.push_back(time);
 }
 //=============================================================================
@@ -346,7 +376,8 @@ void renderTaggedParticle(int particleID,
                             FontCache &tbox ){
     auto p = particles[particleID];
     auto pix = trans(p.pos[0],p.pos[1]);
-        
+    // std::cout<<particleID<<std::endl;
+    // std::cout<<p.pos[0]<<" "<<p.pos[1]<<std::endl;
     if(pix.x >=screen_width || pix.y>=screen_height || pix.x<0 || pix.y<0)
         return;
     renderer.SetDrawColor(0,255,0,0xFF);
@@ -498,6 +529,14 @@ void ParticleApp::OnRender(){
                 }
                 }
                 break;
+            case 4:{
+                    rpixmap->SetPixel(pix, 
+                                {255,
+                                255,
+                                255,
+                                SDL_ALPHA_OPAQUE});
+                break;
+                }
             default:
                 visualizationState =0;
         }

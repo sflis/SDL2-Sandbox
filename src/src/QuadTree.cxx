@@ -33,13 +33,13 @@ void QuadTree::BuildTree(std::vector<Particle> &particles){
     for(auto  &p: particles){
         root.AddParticle(&p, *this);
     }
-
-    root.UpdateActiveNodes();
+    root.UpdateActiveNodes(0);
 }
 
 bool QuadTree::CondParticleAdd(Particle *par, double dist){
     
-
+    par++;
+    dist+=1;
     // Point range = {max.x-min.x,max.y-min.y};
     // Point origo = {(max.x+min.x)/2,(max.y+min.y)/2};
     // double side = (range.x>range.y ? range.x : range.y)*1.1;
@@ -71,6 +71,7 @@ bool QuadTree::CondParticleAdd(Particle *par, double dist){
     //     }
     // }
     // return success;
+    return false;
 }
 
 
@@ -102,32 +103,24 @@ QuadTree::Node& QuadTree::Node::DryAdd(Particle *par, QuadTree &tree){
     }    
 }
 
-void QuadTree::Node::AddParticle(Particle *par,QuadTree &tree){
+void QuadTree::Node::AddParticle(Particle *par, QuadTree &tree){
     totalMass += par->mass;
     centerOfMass.x += par->mass * par->pos[0];
     centerOfMass.y += par->mass * par->pos[1];
-    //determining the index of quadrant in which the particle lands
-    uint16_t quadrandIndex = 0;
-    quadrandIndex = uint16_t(par->pos[0]>=p.x);
-    quadrandIndex = quadrandIndex | uint16_t(par->pos[1]>=p.y)<<1;    
+       
     switch(type){
 
         case Node::EmptyLeaf:
             particles.push_back(par);
-            // particle = par;
             type = ParticleLeaf;
             return;
-        case Node::node:
-
-            nodes[quadrandIndex]->AddParticle(par,tree);
-            // activeNodes.insert(quadrandIndex);
-            return;
+       
         case Node::ParticleLeaf:{
             if(depth>tree.maxDepth or size<tree.minSize){
                 particles.push_back(par);   
                 return;
             }
-            particles.clear();
+            
             double halfsize = size * 0.5;
             auto newdepth = depth+1;
             nodes.push_back(std::make_shared<Node>( Point{p.x-halfsize, p.y-halfsize}, halfsize, EmptyLeaf, newdepth));
@@ -141,9 +134,14 @@ void QuadTree::Node::AddParticle(Particle *par,QuadTree &tree){
             quadrandIndexp = uint16_t(particles[0]->pos[0]>=p.x);
             quadrandIndexp = quadrandIndexp | uint16_t(particles[0]->pos[1]>=p.y)<<1;    
             nodes[quadrandIndexp]->AddParticle(particles[0],tree);
+            particles.clear();
+        }
+        case Node::node:{   
+            //determining the index of quadrant in which the particle lands
+            uint16_t quadrandIndex = 0;
+            quadrandIndex = uint16_t(par->pos[0]>=p.x);
+            quadrandIndex = quadrandIndex | uint16_t(par->pos[1]>=p.y)<<1;
             nodes[quadrandIndex]->AddParticle(par,tree);
-            // activeNodes.insert(quadrandIndex);
-            // activeNodes.insert(quadrandIndexp);
             return;
         }
         default:
@@ -152,22 +150,23 @@ void QuadTree::Node::AddParticle(Particle *par,QuadTree &tree){
     }
 }
 
-void QuadTree::Node::UpdateActiveNodes(){
+int QuadTree::Node::UpdateActiveNodes(int count){
     activeNodes.clear();
-    for(int i = 0; i<nodes.size(); i++){
-        if(nodes[i]->type == Node::node || nodes[i]->type == Node::ParticleLeaf){
-            activeNodes.push_back(i);
-            nodes[i]->UpdateActiveNodes();
-        }
-        
+    if(type == Node::ParticleLeaf){
+        count++;
     }
-    // std::cout<<"$$$$$$$$$$$$$$$$"<<std::endl;
-    // for(auto & i: activeNodes){
-    //     // if(i>3)
-    //         std::cout<<i<<std::endl;
-    // }
-    // std::cout<<std::endl;
-
+    for(size_t i = 0; i<nodes.size(); i++){
+        switch(nodes[i]->type){
+             case Node::node:
+             case Node::ParticleLeaf:
+                activeNodes.push_back(i);
+                count += nodes[i]->UpdateActiveNodes(0);
+            default:
+            break;
+        }
+    }
+        
+    return count;
 }
 
 Particle QuadTree::Node::GetCenterOfMassParticle() const{
@@ -176,7 +175,9 @@ Particle QuadTree::Node::GetCenterOfMassParticle() const{
             {0,0,0},
             {0,0,0},
             0,
-            totalMass
+            totalMass,
+            int(0xffffffff),
+            0
         };
 }
 QuadTree::Node::Node(Point point, 

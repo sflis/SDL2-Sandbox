@@ -33,13 +33,17 @@ ParticleSimulation::ParticleSimulation(double x1,
                                                                         
 double const forceField(const double r){
 
-    return -1.0/(r * r * r+1e-1)+1.0/(r*r*r*r+1e-2);
+    return -1.0/(r * r * r+1e-1);//+1.0/(r*r*r*r+1e-2);
 }
 
+double const forceField1(const double r){
+    if(r>5)
+        return -1.0/(r * r * r+1e-1);//+1.0/(r*r*r*r+1e-2);
+    else
+        return -3*(r-2);
+}
 
 void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
-    // #if(deph)
-    // std::cout<<"Depth: "<<depth<<std::endl;
     if(node.type == QuadTree::Node::EmptyLeaf){
         return;
     }
@@ -49,9 +53,7 @@ void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
     double dy = p.pos[1] - CoMp.pos[1];
     double distance = sqrt(dx * dx + dy * dy);
     double theta = node.size/distance; 
-    // std::cout<<depth<<" "<<p.id<<" "<<CoMp.pos[0]<<" "<<theta<<"  "<<p.pos[0]<<std::endl;
     if(isnan(theta)){
-        // std::cout<<depth<<" "<<p.id<<" "<<CoMp.pos[0]<<std::endl;
         return;
     }
 
@@ -65,28 +67,28 @@ void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
     }
     else{
         switch(node.type){
-            case QuadTree::Node::node:
-                for(const auto &n: node.nodes)
+            case QuadTree::Node::node:{
+                for(auto & n : node.nodes){
                     SumBarnesHut(*n,p,depth+1);
-                // std::cout<<"++++++++++++++ "<<&node.activeNodes<<"  "<<node.particles.size()<<"  "<<depth<<"  "<<node.depth<<std::endl;
-                for(const auto &i: node.activeNodes){
-                    if(i>4){
-                        // std::cout<<i<<"   "<<&i<<"      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
-                        std::cout<<node.type<<" "<<&node.activeNodes<<"  "<<node.particles.size()<<"  "<<node.depth<<std::endl;
-                    }
                 }
-                // std::cout<<std::endl;
-                // for(const auto i: node.activeNodes){
-                //     std::cout<<depth+1<<"  "<<i<<"  "<<node.type<<std::endl;
+                // for(const auto &i: node.activeNodes){
+                //     // if(i>3){
+                //     //     std::cout<<node.type<<" "<<&node.activeNodes<<"  "<<&p<<"  "<<node.depth<<"  "<<theta<<std::endl;
+                //     //     break;
+                //     // }
                 //     SumBarnesHut(*node.nodes[i],p,depth+1);
                 // }
-                break;
+
+                break;}
             default:
+                
                 for(const auto & tp: node.particles){
-                    // std::cout<<&tp<<std::endl;
                     double dx = p.pos[0] - tp->pos[0];
                     double dy = p.pos[1] - tp->pos[1];
                     double r = sqrt(dx*dx + dy*dy);
+                    double damping = 1.0/(r+1e3)*1e-3;
+                    p.damping[0] += damping*(fabs(p.vel[0]-tp->vel[0]));
+                    p.damping[1] += damping*(fabs(p.vel[1]-tp->vel[1]));
                     if(r<1e-2)
                         continue;
                     double norm = tp->mass;
@@ -97,35 +99,52 @@ void SumBarnesHut(const QuadTree::Node &node, Particle &p, int depth){
         }
     }
 }
+void computeAccBarnesHut(QuadTree &tree, Particle &particle){
+
+    particle.oldacc[0] = particle.acc[0];
+    particle.oldacc[1] = particle.acc[1];
+    particle.acc[0] = 0;
+    particle.acc[1] = 0;
+    particle.damping[0] = 0;
+    particle.damping[1] = 0;
+    SumBarnesHut(tree.GetRoot(), particle,0);
+
+}
 
 void ParticleSimulation::BarnesHutSum(double dt){
 
     QuadTree tree;
     tree.BuildTree(particles);
+    for(int i = 0,n = particles.size();i<n;i++){
+        computeAccBarnesHut(tree,particles[i]);
+    }
     // std::map<Particle*,QuadTree::Node*> particleMap;
-     for(int i = 0,n = particles.size();i<n;i++){
-        particlePool.indexQueue.push(i);
-    }
+    //  for(int i = 0,n = particles.size();i<n;i++){
+    //     particlePool.indexQueue.push(i);
+    // }
     
-    for(auto &w: workers)
-        w->SetTree(&tree);
+    // for(auto &w: workers)
+    //     w->SetTree(&tree);
 
-    {
-        std::unique_lock<std::mutex> l(lock);
-        for(auto &w: workers)
-            w->ready = true;
-    }
+    // {
+    //     std::unique_lock<std::mutex> l(lock);
+    //     for(auto &w: workers)
+    //         w->ready = true;
+    // }
 
-    cv.notify_all();
+    // cv.notify_all();
 
-    for(auto &w: workers){
-        std::unique_lock<std::mutex> l(w->llock);
-        w->cv.wait(l, [w]{return w->finished;});
-        w->finished=false;
-    }
+    // for(auto &w: workers){
+    //     std::unique_lock<std::mutex> l(w->llock);
+    //     w->cv.wait(l, [w]{return w->finished;});
+    //     w->finished=false;
+    // }
 
 
     for(auto &p: particles){
+        p.acc[0] -= p.damping[0];
+        p.acc[1] -= p.damping[1];
+
         p.pos[0] += p.vel[0] * dt + 0.5 * p.acc[0] * dt * dt;
         p.pos[1] += p.vel[1] * dt + 0.5 * p.acc[1] * dt * dt;
         p.vel[0] += 0.5 * (p.oldacc[0]+p.acc[0]) * dt;
@@ -134,15 +153,7 @@ void ParticleSimulation::BarnesHutSum(double dt){
     }
 }
 
-void computeAccBarnesHut(QuadTree &tree, Particle &particle){
 
-    particle.oldacc[0] = particle.acc[0];
-    particle.oldacc[1] = particle.acc[1];
-    particle.acc[0] = 0;
-    particle.acc[1] = 0;
-    SumBarnesHut(tree.GetRoot(), particle,0);
-
-}
 
 
 
@@ -257,8 +268,6 @@ void Worker::Run(){
                     i++;
                 }
 
-                // int index1 = particlePool.indexQueue.front();
-                // particlePool.indexQueue.pop();
                 ql.unlock();
                 for(int j =0; j<i; j++){
                     computeAcc3(&particles, indexQueue.front(), nThreads);
@@ -269,7 +278,6 @@ void Worker::Run(){
             }
         }   
 
-        // computeAcc1(&particles, threadIndex, nThreads);
         finished=true;
         ll.unlock();
         cv.notify_one();
@@ -298,12 +306,10 @@ void Worker::Run2(){
                     i++;
                 }
 
-                // int index1 = particlePool.indexQueue.front();
-                // particlePool.indexQueue.pop();
                 ql.unlock();
                 for(int j =0; j<i; j++){
-                    // std::cout<<"Thread "<<threadIndex<<" processing "<<j<<"   "<<indexQueue.front()<<std::endl;
-
+                       std::cout<<"Thread "<<threadIndex<<" processing "<<j<<"   "<<indexQueue.front()<<std::endl;
+                       tree->GetRoot().UpdateActiveNodes(0);
                        computeAccBarnesHut( *tree, particles[indexQueue.front()]);
                     indexQueue.pop();
                 }
@@ -312,7 +318,6 @@ void Worker::Run2(){
             }
         }   
 
-        // computeAcc1(&particles, threadIndex, nThreads);
         finished=true;
         ll.unlock();
         cv.notify_one();

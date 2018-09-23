@@ -19,15 +19,9 @@ struct Particle{
     double charge;
     double mass;
     int id;
+    double damping[3];
 };
 
-struct Accelerations
-{
-    double acc[3];
-    double oldacc[3];
-    double b;
-    double c;
-};
 
 struct ParticlePool{
 
@@ -81,18 +75,15 @@ class ParticleSimulation{
         void Step(double dt);
         void BarnesHutSum(double dt);
         const std::vector<Particle> &GetParticles()const{return particles;}     
-
+        std::vector<Particle> particles;
     private:
         bool ready;
         std::mutex lock;
         std::condition_variable cv;
-        std::vector<Particle> particles;
-        std::vector<Accelerations> accs;
+        
         double x1,x2,y1,y2;
         std::vector<Worker*> workers;
         ParticlePool particlePool;
-        // std::random_device rd;
-        // std::mt19937 eng;//(rd());
         int nThreads;
 };
 
