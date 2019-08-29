@@ -77,6 +77,7 @@ class GraphApp {
         std::vector<double> y3;
 
         FontCache * tbox;
+        InteractiveFigure *figure;
 };
 
 
@@ -131,7 +132,7 @@ bool GraphApp::OnInit() {
             renderer->SetDrawColor(0,0,0,0);
             texture = SDL_CreateTexture(
                                         renderer->Get(),
-                                        SDL_PIXELFORMAT_ARGB8888,
+                                        SDL_PIXELFORMAT_RGBA8888,
                                         SDL_TEXTUREACCESS_STREAMING,
                                         screen_width, screen_height
                                         );
@@ -146,6 +147,7 @@ bool GraphApp::OnInit() {
     }
     SDL_Color c = {0,0,0};
     tbox = new FontCache(renderer->Get(),c);
+    figure = new InteractiveFigure(renderer,tbox,{0,0,1,1});
     return true;
 }
 
@@ -156,6 +158,9 @@ void GraphApp::OnEvent(SDL_Event* event){
                 running = false;
                 std::cout<<"Exiting"<<std::endl;
         }
+        
+        
+
         //User presses a key
         else if( event->type == SDL_KEYDOWN ){
             //Select surfaces based on key press
@@ -167,7 +172,7 @@ void GraphApp::OnEvent(SDL_Event* event){
                     break;
             }
         }
-
+        figure->HandleInput(event);
     
 }
  
@@ -213,10 +218,13 @@ void GraphApp::OnRender(){
     fig.Plot(x,y,blue);
     fig.Plot(x,y2,red);
     fig.Plot(x,y3,green);
+    figure->Plot(x,y,blue);
+
     Range ylim = {-8.0,8.0};
     // fig.SetYLim(ylim);
-    SDL_Rect r ={200,100,800,400};
+    SDL_Rect r ={200,100,800,200};
     fig.Render(r);
+    figure->Render({200,350,800,200});
     renderer->Present();
     SDL_Delay(30);
 }

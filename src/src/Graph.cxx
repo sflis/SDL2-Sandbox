@@ -195,8 +195,8 @@ Figure::Figure(sdl2::Renderer_ptr_t_shr renderer, FontCache *font):width(0),
 
 }
 //=============================================================================
-Line & Figure::Plot(std::vector<double> &x, std::vector<double> &y,color c){
-    Line newLine{x,y,c,1.0};
+Line & Figure::Plot(std::vector<double> &x, std::vector<double> &y,uint32_t c){
+    Line newLine{x,y,c,0,1.0};
     lines.push_back(newLine);
     Update();
     return lines.back();
@@ -236,22 +236,8 @@ void Figure::Render(SDL_Rect rect){
     SDL_RenderFillRect(renderer->Get(), &canvas);
     
     for(auto &line: lines){
-        // int r=0,b=0,g= 0;
-        int r,b,g;
-        switch(line.c){
-            case blue:
-                r = 0;b = 255;g = 0;
-                break;
-            case green:
-                r = 0;b = 0;g = 255;
-                break;
-            case red:
-                r = 255;b = 0;g = 0;
-                break;
-            default:
-              r = 255;b = 255;g = 255;
-        }
-        renderer->SetDrawColor(r, g, b, 0xFF );
+      
+        renderer->SetDrawColor(hex2rgb(line.c));
         SDL_Point points[line.xData.size()];
         for(uint64_t i = 0; i<line.xData.size();i++){
             Pix p = box_coord(cotrans({line.xData[i], line.yData[i]}));
@@ -311,14 +297,24 @@ InteractiveFigure::InteractiveFigure(sdl2::Renderer_ptr_t_shr renderer,
 
 }
 //=============================================================================
-void InteractiveFigure::Render(){
+void InteractiveFigure::Render(SDL_Rect rect){
+    Figure::Render(rect);
+    char buf[100];
+    std::sprintf(buf,"(%.4d,%.4d)",mouse_x,mouse_y);
+    font->Render(buf,
+                        rect,
+                        renderer->Get(),
+                        hex2rgb(0xfffff),
+                        10,
+                        FontCache::center,
+                        false);
 
 }
 //=============================================================================
 void InteractiveFigure::HandleInput(SDL_Event* e){
   
-  int x, y;
-  SDL_GetMouseState( &x, &y );
+  SDL_GetMouseState( &mouse_x, &mouse_y );
+
   // Pix = {x,y};
   
 

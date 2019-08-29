@@ -136,6 +136,7 @@ void QuadTree::Node::AddParticle(Particle *par, QuadTree &tree){
             quadrandIndexp = quadrandIndexp | uint16_t(particles[0]->pos[1]>=p.y)<<1;    
             nodes[quadrandIndexp]->AddParticle(particles[0],tree);
             particles.clear();
+            //falling through to the node case
         }
         case Node::node:{   
             //determining the index of the quadrant in which the new particle lands

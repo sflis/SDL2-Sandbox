@@ -10,13 +10,16 @@
 
 #include <vector>
 
-enum color{blue,red,green,magenta};
+
 
 struct Line
 {    
     std::vector<double> xData;
     std::vector<double> yData;
-    color c;
+    uint32_t c;
+    uint32_t alpha;
+    // color c;
+    // SDL_Color c;
     double width;
 };
 
@@ -61,7 +64,7 @@ class Figure {
         Figure(sdl2::Renderer_ptr_t_shr renderer, FontCache *font);
         ~Figure();
 
-        Line & Plot(std::vector<double> &x, std::vector<double> &y,color c);
+        Line & Plot(std::vector<double> &x, std::vector<double> &y,uint32_t c);
 
         void Render(SDL_Rect rect);
         void SetYLim(Range r){ylim = r;}
@@ -95,11 +98,13 @@ class Figure {
 class InteractiveFigure: public Figure{
     public:
         InteractiveFigure(sdl2::Renderer_ptr_t_shr renderer, FontCache *font, SDL_Rect rect);
-        void Render();
+        void Render(SDL_Rect rect);
         void HandleInput(SDL_Event* e);
 
     private:
         SDL_Rect loc;
+        int mouse_x;
+        int mouse_y;
 };
 
 #endif

@@ -63,6 +63,8 @@ namespace sdl2{
             ~Renderer(){};
 
             int SetDrawColor(uint8_t r,int8_t g,int8_t b, uint8_t a=0){return SDL_SetRenderDrawColor(renderer.get(),r,g,b,a);}
+            int SetDrawColor(SDL_Color c){return SDL_SetRenderDrawColor(renderer.get(),c.r,c.g,c.b,c.a);}
+            // int SetDrawColor(uint8_t r,int8_t g,int8_t b, uint8_t a=0){return SDL_SetRenderDrawColor(renderer.get(),r,g,b,a);}
             
             int Clear(){return SDL_RenderClear(renderer.get());}
 

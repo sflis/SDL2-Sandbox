@@ -9,6 +9,16 @@
 #include <vector>
 
 #include <iostream>
+
+enum color{blue=0x0000ff00,
+           red=0xff000000,
+           green=0x00ff0000,
+           magenta=0xff00ff00,
+           cyan=0x00ffff00,
+           yellow=0xffff0000,
+           white=0xffffff00,
+           black=0x00000000};
+
 ///Converts rgba colors to hex color
 inline uint32_t rgb2hex(uint8_t r,int8_t g,int8_t b, int8_t a){
     return (r << 24) + (g << 16) + (b << 8) + a;
